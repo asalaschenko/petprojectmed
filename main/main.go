@@ -59,6 +59,7 @@ func main() {
 
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/doctors/list", cruds.List)
+	http.HandleFunc("/patients/list", cruds.List)
 	err := http.ListenAndServe("localhost:"+port, nil)
 	log.Fatal(err)
 }

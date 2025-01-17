@@ -7,14 +7,17 @@ import (
 )
 
 type ID_DB int
-type SIZE_DB int
 
 func GetFileDatabaseSize(filename string) int {
-	return 100
-}
-
-func (numberRecords SIZE_DB) Select(filename string) string {
-	return ""
+	var count ID_DB = 0
+	recordDB := ""
+	for {
+		recordDB = count.Select(filename)
+		if len(recordDB) <= 2 {
+			return int(count)
+		}
+		count++
+	}
 }
 
 func SelectHeader(filename string) string {

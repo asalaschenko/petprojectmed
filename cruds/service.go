@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"petprojectmed/DAO"
+	"strings"
 )
 
 func List(writer http.ResponseWriter, request *http.Request) {
@@ -17,20 +18,37 @@ func List(writer http.ResponseWriter, request *http.Request) {
 
 	log.Println("url.Parse(request.URL.String()): ", u)
 	params := u.Query()
+	url := u.RequestURI()
+	log.Println(url)
+	array := strings.Split(url, "/")
+	databaseFileName := array[1]
+	log.Println(databaseFileName)
 	log.Println("u.Query():", params)
 
 	urlArg := params["id"]
 	if len(urlArg) == 0 {
-		_, err := writer.Write([]byte("все доктора"))
+		count := DAO.GetFileDatabaseSize(databaseFileName)
+		//_, err := writer.Write([]byte("число записей:" + count))
+		//if err != nil {
+		//log.Fatal(err)
+		//}
+		header := DAO.SelectHeader(databaseFileName)
+		body := ""
+		for i := 0; i < count; i++ {
+			index := DAO.ID_DB(i)
+			body += index.Select(databaseFileName)
+		}
+		outputString := wrapperTable(header, body)
+		_, err := writer.Write([]byte(outputString))
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
 		idArray := ConvertToIdArray(urlArg)
-		header := DAO.SelectHeader("doctors")
+		header := DAO.SelectHeader(databaseFileName)
 		body := ""
 		for _, value := range idArray {
-			body += value.Select("doctors")
+			body += value.Select(databaseFileName)
 		}
 		outputString := wrapperTable(header, body)
 
