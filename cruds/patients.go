@@ -1,5 +1,0 @@
-package cruds
-
-func get() {
-
-}
