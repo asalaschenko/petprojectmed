@@ -28,10 +28,6 @@ func List(writer http.ResponseWriter, request *http.Request) {
 	urlArg := params["id"]
 	if len(urlArg) == 0 {
 		count := DAO.GetFileDatabaseSize(databaseFileName)
-		//_, err := writer.Write([]byte("число записей:" + count))
-		//if err != nil {
-		//log.Fatal(err)
-		//}
 		header := DAO.SelectHeader(databaseFileName)
 		body := ""
 		for i := 0; i < count; i++ {
