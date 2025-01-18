@@ -1,4 +1,4 @@
-package DAO
+package dao
 
 import (
 	"bufio"
@@ -8,11 +8,11 @@ import (
 
 type ID_DB int
 
-func GetDatabaseFileSize(filename string) int {
+func GetSizeFileDB(filename string) int {
 	var count ID_DB = 0
 	recordDB := ""
 	for {
-		recordDB = count.Select(filename)
+		recordDB = count.GetRecordFileDB(filename)
 		if len(recordDB) <= 2 {
 			return int(count)
 		}
@@ -20,7 +20,7 @@ func GetDatabaseFileSize(filename string) int {
 	}
 }
 
-func SelectHeader(filename string) string {
+func GetHeaderFlieDB(filename string) string {
 	file, err := os.Open("../files/" + filename + ".txt")
 	if err != nil {
 		log.Printf("Ошибка открытия файла: %v\n", err)
@@ -44,7 +44,7 @@ func SelectHeader(filename string) string {
 	return line
 }
 
-func (index ID_DB) Select(filename string) string {
+func (index ID_DB) GetRecordFileDB(filename string) string {
 	file, err := os.Open("../files/" + filename + ".txt")
 	if err != nil {
 		log.Printf("Ошибка открытия файла: %v\n", err)

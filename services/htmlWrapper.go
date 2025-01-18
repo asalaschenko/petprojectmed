@@ -1,4 +1,4 @@
-package cruds
+package services
 
 import (
 	"strings"
