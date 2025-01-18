@@ -10,25 +10,34 @@ import (
 
 var err_env error = errors.New("not found port for current application")
 
-func mainHandler(writer http.ResponseWriter, request *http.Request) {
-	var message string = "<h1 style=text-align:center;><p><samp>Пет-проект Клиника</samp></p></h1>"
-	message += "<p style=text-align:center;><span style=\"font-size:24px;background-color:#B8DAF8;\">Здравствуйте! Вы находитесь на главной странице.</span></p>"
-	byteMsg := []byte(message)
-	_, err := writer.Write(byteMsg)
+func check(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+func mainHandler(writer http.ResponseWriter, request *http.Request) {
+	var message string = "<h1 style=text-align:center;><p><samp>Пет-проект Клиника</samp></p></h1>"
+	message += "<p style=text-align:center;><span style=\"font-size:24px;background-color:#B8DAF8;\">Здравствуйте! Вы находитесь на главной странице.</span></p>"
+	byteMsg := []byte(message)
+	_, err := writer.Write(byteMsg)
+	check(err)
+}
+
+func redirectHandler(writer http.ResponseWriter, request *http.Request) {
+	http.Redirect(writer, request, "/main", http.StatusFound)
+}
+
 func main() {
 	port, exists := os.LookupEnv("PORT_GOLANG")
 	if !exists {
-		log.Fatal(err_env)
+		check(err_env)
 	}
 
-	http.HandleFunc("/", mainHandler)
-	http.HandleFunc("/doctors/list", cruds.List)
-	http.HandleFunc("/patients/list", cruds.List)
+	http.HandleFunc("/", redirectHandler)
+	http.HandleFunc("/main", mainHandler)
+	http.HandleFunc("/doctors/list", cruds.ListRecordsHandler)
+	http.HandleFunc("/patients/list", cruds.ListRecordsHandler)
 	err := http.ListenAndServe("localhost:"+port, nil)
 	log.Fatal(err)
 }

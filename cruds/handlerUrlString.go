@@ -6,13 +6,13 @@ import (
 	"strings"
 )
 
-func ConvertToIdArray(array []string) []DAO.ID_DB {
+func ConvertToIdValues(array []string) []DAO.ID_DB {
 	outputArray := []DAO.ID_DB{}
 
-	for _, str1 := range array {
-		splitValues := strings.Fields(str1)
-		for _, str2 := range splitValues {
-			value, err := strconv.Atoi(str2)
+	for _, idArray := range array {
+		splitValues := strings.Fields(idArray)
+		for _, idValue := range splitValues {
+			value, err := strconv.Atoi(idValue)
 			if err == nil {
 				outputArray = append(outputArray, DAO.ID_DB(value))
 			}

@@ -2,13 +2,13 @@ package DAO
 
 import (
 	"bufio"
-	"fmt"
+	"log"
 	"os"
 )
 
 type ID_DB int
 
-func GetFileDatabaseSize(filename string) int {
+func GetDatabaseFileSize(filename string) int {
 	var count ID_DB = 0
 	recordDB := ""
 	for {
@@ -23,12 +23,12 @@ func GetFileDatabaseSize(filename string) int {
 func SelectHeader(filename string) string {
 	file, err := os.Open("../files/" + filename + ".txt")
 	if err != nil {
-		fmt.Printf("Ошибка открытия файла: %v\n", err)
+		log.Printf("Ошибка открытия файла: %v\n", err)
 		return ""
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			fmt.Printf("Ошибка закрытия файла: %v\n", err)
+			log.Printf("Ошибка закрытия файла: %v\n", err)
 		}
 	}()
 
@@ -37,7 +37,7 @@ func SelectHeader(filename string) string {
 	line, err := reader.ReadString('\n')
 	if err != nil {
 		if err.Error() != "EOF" {
-			fmt.Printf("Ошибка чтения файла: %v\n", err)
+			log.Printf("Ошибка чтения файла: %v\n", err)
 		}
 	}
 
@@ -47,12 +47,12 @@ func SelectHeader(filename string) string {
 func (index ID_DB) Select(filename string) string {
 	file, err := os.Open("../files/" + filename + ".txt")
 	if err != nil {
-		fmt.Printf("Ошибка открытия файла: %v\n", err)
+		log.Printf("Ошибка открытия файла: %v\n", err)
 		return ""
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			fmt.Printf("Ошибка закрытия файла: %v\n", err)
+			log.Printf("Ошибка закрытия файла: %v\n", err)
 		}
 	}()
 
@@ -62,7 +62,7 @@ func (index ID_DB) Select(filename string) string {
 		_, err := reader.ReadString('\n')
 		if err != nil {
 			if err.Error() != "EOF" {
-				fmt.Printf("Ошибка чтения файла: %v\n", err)
+				log.Printf("Ошибка чтения файла: %v\n", err)
 			}
 			break
 		}
@@ -70,7 +70,7 @@ func (index ID_DB) Select(filename string) string {
 	line, err := reader.ReadString('\n')
 	if err != nil {
 		if err.Error() != "EOF" {
-			fmt.Printf("Ошибка чтения файла: %v\n", err)
+			log.Printf("Ошибка чтения файла: %v\n", err)
 		}
 	}
 

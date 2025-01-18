@@ -8,7 +8,13 @@ import (
 	"strings"
 )
 
-func List(writer http.ResponseWriter, request *http.Request) {
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ListRecordsHandler(writer http.ResponseWriter, request *http.Request) {
 	u, err := url.Parse(request.URL.String())
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -27,7 +33,7 @@ func List(writer http.ResponseWriter, request *http.Request) {
 
 	urlArg := params["id"]
 	if len(urlArg) == 0 {
-		count := DAO.GetFileDatabaseSize(databaseFileName)
+		count := DAO.GetDatabaseFileSize(databaseFileName)
 		header := DAO.SelectHeader(databaseFileName)
 		body := ""
 		for i := 0; i < count; i++ {
@@ -35,12 +41,11 @@ func List(writer http.ResponseWriter, request *http.Request) {
 			body += index.Select(databaseFileName)
 		}
 		outputString := wrapperTable(header, body)
+
 		_, err := writer.Write([]byte(outputString))
-		if err != nil {
-			log.Fatal(err)
-		}
+		check(err)
 	} else {
-		idArray := ConvertToIdArray(urlArg)
+		idArray := ConvertToIdValues(urlArg)
 		header := DAO.SelectHeader(databaseFileName)
 		body := ""
 		for _, value := range idArray {
@@ -49,8 +54,6 @@ func List(writer http.ResponseWriter, request *http.Request) {
 		outputString := wrapperTable(header, body)
 
 		_, err := writer.Write([]byte(outputString))
-		if err != nil {
-			log.Fatal(err)
-		}
+		check(err)
 	}
 }
