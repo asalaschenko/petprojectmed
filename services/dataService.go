@@ -9,34 +9,29 @@ import (
 func GetDataOfTables(url string, urlArg []string) string {
 
 	databaseFileName := url
+	body := ""
 	outputString := ""
+	header := dao.GetHeaderFileDB(databaseFileName)
 
 	if len(urlArg) == 0 {
 		count := dao.GetSizeFileDB(databaseFileName)
-		header := dao.GetHeaderFileDB(databaseFileName)
-		body := ""
 		for i := 0; i < count; i++ {
 			index := dao.ID_DB(i)
 			body += index.GetRecordFileDB(databaseFileName)
 		}
-		if body == "" {
-			outputString = "<h1><span style=\"font-size:24px;\">Нет данных !</span></h1>"
-		} else {
-			outputString = wrapperTable(header, body)
-		}
 	} else {
 		idArray := ConvertToIdValues(urlArg)
-		header := dao.GetHeaderFileDB(databaseFileName)
-		body := ""
 		for _, value := range idArray {
 			body += value.GetRecordFileDB(databaseFileName)
 		}
-		if body == "" {
-			outputString = "<h1><span style=\"font-size:24px;\">Нет данных !</span></h1>"
-		} else {
-			outputString = wrapperTable(header, body)
-		}
 	}
+
+	if body == "" {
+		outputString = "<h1><span style=\"font-size:24px;\">Нет данных !</span></h1>"
+	} else {
+		outputString = wrapperTable(header, body)
+	}
+
 	return outputString
 }
 
