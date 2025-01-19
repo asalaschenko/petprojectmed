@@ -13,7 +13,7 @@ func GetDataOfTables(url string, urlArg []string) string {
 
 	if len(urlArg) == 0 {
 		count := dao.GetSizeFileDB(databaseFileName)
-		header := dao.GetHeaderFlieDB(databaseFileName)
+		header := dao.GetHeaderFileDB(databaseFileName)
 		body := ""
 		for i := 0; i < count; i++ {
 			index := dao.ID_DB(i)
@@ -26,7 +26,7 @@ func GetDataOfTables(url string, urlArg []string) string {
 		}
 	} else {
 		idArray := ConvertToIdValues(urlArg)
-		header := dao.GetHeaderFlieDB(databaseFileName)
+		header := dao.GetHeaderFileDB(databaseFileName)
 		body := ""
 		for _, value := range idArray {
 			body += value.GetRecordFileDB(databaseFileName)
