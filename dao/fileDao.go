@@ -10,10 +10,10 @@ type ID_DB int
 
 func GetSizeFileDB(filename string) int {
 	var count ID_DB = 0
-	recordDB := ""
+	recordFileDB := ""
 	for {
-		recordDB = count.GetRecordFileDB(filename)
-		if len(recordDB) <= 2 {
+		recordFileDB = count.GetRecordFileDB(filename)
+		if len(recordFileDB) <= 2 {
 			return int(count)
 		}
 		count++
