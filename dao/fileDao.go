@@ -20,7 +20,7 @@ func GetSizeFileDB(filename string) int {
 	}
 }
 
-func GetHeaderFlieDB(filename string) string {
+func GetHeaderFileDB(filename string) string {
 	file, err := os.Open("../files/" + filename + ".txt")
 	if err != nil {
 		log.Printf("Ошибка открытия файла: %v\n", err)
