@@ -10,10 +10,10 @@ type Doctor struct {
 }
 
 type Patient struct {
-	ID          int    `json:"id,omitempty"`
+	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Family      string `json:"family"`
-	DateOfBirth string `json:"date of birth,omitempty"`
-	Gender      string `json:"gender,omitempty"`
+	DateOfBirth string `json:"date of birth"`
+	Gender      string `json:"gender"`
 	PhoneNumber string `json:"phone number"`
 }

@@ -1,1 +1,41 @@
-[{"name":"Алексей","family":"Иванов","date of birth":"10.03.1992","gender":"женский","phone number":"79014445566"},{"id":1,"name":"Dmitry","family":"Shilkin","date of birth":"11.02.1993","gender":"мужской","phone number":"79026665544"},{"id":2,"name":"Anna","family":"Kuzmina","date of birth":"12.06.1994","gender":"женский","phone number":"79045556644"},{"id":3,"name":"Pavel","family":"Dmitriev","date of birth":"13.04.1995","gender":"мужской","phone number":"79057776655"},{"id":4,"name":"Алина","family":"Бадаева","date of birth":"1996-10-10 00:00:00 +0000 UTC","gender":"Женский","phone number":"79055556644"}]
+[
+    {
+        "name": "Алексей",
+        "family": "Иванов",
+        "date of birth": "10.03.1992",
+        "gender": "женский",
+        "phone number": "79014445566"
+    },
+    {
+        "id": 1,
+        "name": "Dmitry",
+        "family": "Shilkin",
+        "date of birth": "11.02.1993",
+        "gender": "мужской",
+        "phone number": "79026665544"
+    },
+    {
+        "id": 2,
+        "name": "Anna",
+        "family": "Kuzmina",
+        "date of birth": "12.06.1994",
+        "gender": "женский",
+        "phone number": "79045556644"
+    },
+    {
+        "id": 3,
+        "name": "Pavel",
+        "family": "Dmitriev",
+        "date of birth": "13.04.1995",
+        "gender": "мужской",
+        "phone number": "79057776655"
+    },
+    {
+        "id": 4,
+        "name": "Алина",
+        "family": "Бадаева",
+        "date of birth": "1996-10-10 00:00:00 +0000 UTC",
+        "gender": "Женский",
+        "phone number": "79055556644"
+    }
+]
