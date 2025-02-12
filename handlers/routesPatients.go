@@ -12,5 +12,4 @@ func RegisterRoutesPatients(app *fiber.App) {
 	patients.Post("/", CreatePatient)
 	patients.Delete("/:id", DeletePatient)
 	patients.Put("/:id", UpdatePatient)
-	
 }
