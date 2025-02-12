@@ -126,9 +126,9 @@ func CreateAppointment(c *fiber.Ctx) error {
 	newEntryOutput.DoctorInitials = doctors[newEntryOutput.DoctorID].Name + " " + doctors[newEntryOutput.DoctorID].Family
 	newEntryOutput.PatientInitials = patients[newEntryOutput.PatientID].Name + " " + patients[newEntryOutput.PatientID].Family
 	newEntryOutput.Specialization = doctors[newEntryOutput.DoctorID].Specialization
+
 	outputSchedule := ReadScheduleJsonFile()
 	newEntryOutput.ID = len(outputSchedule)
-
 	outputSchedule = append(outputSchedule, *newEntryOutput)
 	WriteScheduleJsonFile(outputSchedule)
 	return c.SendString("Готово")
