@@ -25,7 +25,12 @@ func main() {
 		return c.JSON(c.App().Stack())
 	})
 
-	handlers.RegisterRoutes(app)
+	registerRoutes(app)
 
 	app.Listen(":" + port)
+}
+
+func registerRoutes(app *fiber.App) {
+	handlers.RegisterRoutesDoctors(app)
+	handlers.RegisterRoutesPatients(app)
 }

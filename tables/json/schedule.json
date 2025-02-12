@@ -1,0 +1,83 @@
+[
+    {
+        "id": 0,
+        "doctorID": 1,
+        "doctorInitials": "Dmitry Shishkin",
+        "specialization": "педиатр",
+        "dateAppointment": "2025-02-19T15:00:00Z",
+        "patientID": 4,
+        "patientInitials": "Алина Бадаева"
+    },
+    {
+        "id": 1,
+        "doctorID": 3,
+        "doctorInitials": "Pavel Dmitriev",
+        "specialization": "терапевт",
+        "dateAppointment": "2025-02-19T16:00:00Z",
+        "patientID": 4,
+        "patientInitials": "Алина Бадаева"
+    },
+    {
+        "id": 2,
+        "doctorID": 3,
+        "doctorInitials": "Pavel Dmitriev",
+        "specialization": "терапевт",
+        "dateAppointment": "2025-02-17T13:00:00Z",
+        "patientID": 2,
+        "patientInitials": "Anna Kuzmina"
+    },
+    {
+        "id": 3,
+        "doctorID": 5,
+        "doctorInitials": "Василий Круглов",
+        "specialization": "Хирург",
+        "dateAppointment": "2025-02-18T13:00:00Z",
+        "patientID": 2,
+        "patientInitials": "Anna Kuzmina"
+    },
+    {
+        "id": 4,
+        "doctorID": 0,
+        "doctorInitials": "Alexey Ivanov",
+        "specialization": "рентгенолог",
+        "dateAppointment": "2025-02-18T13:00:00Z",
+        "patientID": 0,
+        "patientInitials": "Алексей Иванов"
+    },
+    {
+        "id": 5,
+        "doctorID": 0,
+        "doctorInitials": "Alexey Ivanov",
+        "specialization": "рентгенолог",
+        "dateAppointment": "2025-02-06T18:00:00Z",
+        "patientID": 0,
+        "patientInitials": "Алексей Иванов"
+    },
+    {
+        "id": 10,
+        "doctorID": 4,
+        "doctorInitials": "Алексей Салащенко",
+        "specialization": "Хирург",
+        "dateAppointment": "2025-05-05T09:00:00Z",
+        "patientID": 4,
+        "patientInitials": "Алина Бадаева"
+    },
+    {
+        "id": 11,
+        "doctorID": 4,
+        "doctorInitials": "Алексей Салащенко",
+        "specialization": "Хирург",
+        "dateAppointment": "2025-05-06T09:00:00Z",
+        "patientID": 4,
+        "patientInitials": "Алина Бадаева"
+    },
+    {
+        "id": 12,
+        "doctorID": 4,
+        "doctorInitials": "Алексей Салащенко",
+        "specialization": "Хирург",
+        "dateAppointment": "2025-05-07T10:00:00Z",
+        "patientID": 4,
+        "patientInitials": "Алина Бадаева"
+    }
+]

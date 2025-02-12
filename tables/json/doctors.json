@@ -1,42 +1,42 @@
 [
     {
         "id": 0,
-        "name": "Alexey",
-        "family": "Ivanov",
-        "specialization": "рентгенолог",
-        "date of birth": "11.02.1993",
+        "name": "Алексей",
+        "family": "Иванов",
+        "specialization": "Рентгенолог",
+        "dateOfBirth": "1991-10-28 00:00:00 +0000 UTC",
         "cabinet": 43
     },
     {
         "id": 1,
-        "name": "Dmitry",
-        "family": "Shishkin",
-        "specialization": "педиатр",
-        "date of birth": "11.02.1994",
+        "name": "Дмитрий",
+        "family": "Шишкин",
+        "specialization": "Педиатр",
+        "dateOfBirth": "1995-10-28 00:00:00 +0000 UTC",
         "cabinet": 100
     },
     {
         "id": 2,
-        "name": "Timofey",
-        "family": "Kuzmin",
-        "specialization": "рентгенолог",
-        "date of birth": "11.02.1995",
+        "name": "Тимофей",
+        "family": "Кузьмин",
+        "specialization": "Рентгенолог",
+        "dateOfBirth": "1996-10-28 00:00:00 +0000 UTC",
         "cabinet": 78
     },
     {
         "id": 3,
-        "name": "Pavel",
-        "family": "Dmitriev",
-        "specialization": "терапевт",
-        "date of birth": "11.02.1996",
+        "name": "Павел",
+        "family": "Дмитриев",
+        "specialization": "Терапевт",
+        "dateOfBirth": "1997-10-28 00:00:00 +0000 UTC",
         "cabinet": 5
     },
     {
         "id": 4,
-        "name": "Alexey",
-        "family": "Soloshenko",
-        "specialization": "хирург",
-        "date of birth": "11.02.1997",
+        "name": "Алексей",
+        "family": "Салащенко",
+        "specialization": "Хирург",
+        "dateOfBirth": "1998-10-28 00:00:00 +0000 UTC",
         "cabinet": 18
     },
     {
@@ -44,7 +44,7 @@
         "name": "Василий",
         "family": "Круглов",
         "specialization": "Хирург",
-        "date of birth": "1998-11-13 00:00:00 +0000 UTC",
+        "dateOfBirth": "1991-10-28 00:00:00 +0000 UTC",
         "cabinet": 99
     },
     {
@@ -52,15 +52,23 @@
         "name": "Максим",
         "family": "Петров",
         "specialization": "Заведующий клиникой",
-        "date of birth": "1990-11-13 00:00:00 +0000 UTC",
+        "dateOfBirth": "1989-10-28 00:00:00 +0000 UTC",
         "cabinet": 68
     },
     {
         "id": 7,
         "name": "Иван",
         "family": "Травкин",
-        "specialization": "хирург",
-        "date of birth": "1993-11-13 00:00:00 +0000 UTC",
+        "specialization": "Хирург",
+        "dateOfBirth": "1989-10-28 00:00:00 +0000 UTC",
         "cabinet": 6
+    },
+    {
+        "id": 8,
+        "name": "Дмитрий",
+        "family": "Шильников",
+        "specialization": "Хирург",
+        "dateOfBirth": "1990-10-28 00:00:00 +0000 UTC",
+        "cabinet": 16
     }
 ]

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"log"
-	"petprojectmed/models"
+	"petprojectmed/dto"
 	"petprojectmed/utils"
 	"regexp"
 	"sort"
@@ -14,8 +14,66 @@ import (
 	"golang.org/x/text/language"
 )
 
+func GetPatientsListID(c *fiber.Ctx) error {
+	paramsID := new(dto.ParamsListID)
+	err := c.ParamsParser(paramsID)
+
+	if err == nil {
+		patients := ReadPatientsJsonFile()
+		outputData := []dto.Patient{}
+
+		sort.Ints(paramsID.ID)
+		paramsID.ID = utils.RemoveDuplicateInt(paramsID.ID)
+
+		for _, value := range paramsID.ID {
+			if value < len(patients) && value >= 0 {
+				outputData = append(outputData, patients[value])
+			} else {
+				return c.Status(fiber.StatusBadRequest).SendString("Список содержит несуществующий ID !")
+			}
+		}
+		log.Println(outputData)
+		return c.JSON(outputData)
+	} else {
+		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
+	}
+}
+
+func GetPatientsListFilter(c *fiber.Ctx) error {
+	queryFilters := new(dto.QueryPatientsListFilter)
+	err := c.QueryParser(queryFilters)
+	utils.CheckErr(err)
+
+	switch queryFilters.List {
+	case "all":
+		patients := ReadPatientsJsonFile()
+		return c.JSON(patients)
+	case "filters":
+		if len(queryFilters.PhoneNumbers) != 0 && queryFilters.PhoneNumbers[0] != "" {
+			patients := ReadPatientsJsonFile()
+			arrayIndex := []int{}
+			for _, valPhoneNumber := range queryFilters.PhoneNumbers {
+				arrayIndex = append(arrayIndex, returnIndexOfTargetPhoneNumber(valPhoneNumber, &patients)...)
+			}
+			sort.Ints(arrayIndex)
+			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
+			outputPatients := []dto.Patient{}
+			for _, value := range arrayIndex {
+				outputPatients = append(outputPatients, patients[value])
+			}
+			return c.JSON(outputPatients)
+		} else {
+			return c.Status(fiber.StatusBadRequest).SendString("Пустой список специальностей !")
+		}
+	case "":
+		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос !")
+	default:
+		return c.Status(fiber.StatusBadRequest).SendString("Пустой или неправильный запрос !")
+	}
+}
+
 func CreatePatient(c *fiber.Ctx) error {
-	newEntry := new(models.Patient)
+	newEntry := new(dto.Patient)
 
 	if err := c.BodyParser(newEntry); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
@@ -26,7 +84,7 @@ func CreatePatient(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(errorMessage)
 	}
 
-	newEntry.PhoneNumber = utils.TrimSpaces(newEntry.PhoneNumber)
+	// /newEntry.PhoneNumber = utils.TrimSpaces(newEntry.PhoneNumber)
 	caser := cases.Title(language.Russian)
 	newEntry.Name = caser.String(newEntry.Name)
 	newEntry.Family = caser.String(newEntry.Family)
@@ -50,7 +108,7 @@ func UpdatePatient(c *fiber.Ctx) error {
 	patients := ReadPatientsJsonFile()
 	if intIdValue >= 0 && intIdValue < len(patients) {
 
-		newEntry := new(models.Patient)
+		newEntry := new(dto.Patient)
 		if err := c.BodyParser(newEntry); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
 		}
@@ -104,65 +162,13 @@ func DeletePatient(c *fiber.Ctx) error {
 			patients[index].ID = index
 		}
 		WritePatientsJsonFile(patients)
-		//c.Status(fiber.StatusOK).SendString("Запись с id=" + strconv.Itoa(intIdValue) + " успешно удалена !")
 		return c.JSON(patient)
 	} else {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный ID")
 	}
 }
 
-func GetPatientsList(c *fiber.Ctx) error {
-
-	patients := ReadPatientsJsonFile()
-
-	m := c.Queries()
-	log.Println(m)
-	valAll, okAll := m["all"]
-	if okAll {
-		switch valAll {
-		case "":
-			return c.JSON(patients)
-		case "filter":
-			valPhoneNumber, okPhoneNumber := m["phone number"]
-			log.Println(valPhoneNumber)
-			if okPhoneNumber && valPhoneNumber != "" {
-				arrayIndex := returnIndexOfTargetPhoneNumber(valPhoneNumber, &patients)
-				log.Println(arrayIndex)
-				outputPatients := []models.Patient{}
-				for _, value := range arrayIndex {
-					outputPatients = append(outputPatients, patients[value])
-				}
-				return c.JSON(outputPatients)
-			}
-		}
-	}
-
-	structID := new(id)
-	flag := c.Query("id", "")
-	if flag != "" {
-		err := c.QueryParser(structID)
-		utils.CheckErr(err)
-		outputData := []models.Patient{}
-		arrayID := []int{}
-		for _, value := range structID.ID {
-			id, err := strconv.Atoi(value)
-			if err == nil {
-				arrayID = append(arrayID, id)
-			}
-		}
-		sort.Ints(arrayID)
-		arrayID = utils.RemoveDuplicateInt(arrayID)
-		for _, value := range arrayID {
-			if value < len(patients) {
-				outputData = append(outputData, patients[value])
-			}
-		}
-		return c.JSON(outputData)
-	}
-	return c.Status(fiber.StatusForbidden).SendString("Пустой или неправильный запрос !")
-}
-
-func validateNewJsonPatients(newEntry *models.Patient) (bool, string) {
+func validateNewJsonPatients(newEntry *dto.Patient) (bool, string) {
 	flag := true
 	outputString := ""
 	caser := cases.Lower(language.Russian)
@@ -196,6 +202,10 @@ func validateNewJsonPatients(newEntry *models.Patient) (bool, string) {
 		flag = false
 		outputString += "Номер телефона должен иметь следующий формат: 7xxxxxxxxxx !" + "\n"
 	}
+	if isTherePhoneNumberInOtherPatients(newEntry.PhoneNumber) {
+		flag = false
+		outputString += "Вы ввели уже существующий номер телефона !"
+	}
 
 	/*newEntry.DateOfBirth*/
 	val, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
@@ -215,7 +225,7 @@ func validateNewJsonPatients(newEntry *models.Patient) (bool, string) {
 	return flag, outputString
 }
 
-func validateUpdateJsonPatients(newEntry *models.Patient) (bool, string) {
+func validateUpdateJsonPatients(newEntry *dto.Patient) (bool, string) {
 	flag := true
 	outputString := ""
 	caser := cases.Lower(language.Russian)
@@ -242,6 +252,10 @@ func validateUpdateJsonPatients(newEntry *models.Patient) (bool, string) {
 			flag = false
 			outputString += "Номер телефона должен иметь следующий формат: 7xxxxxxxxxx !" + "\n"
 		}
+		if isTherePhoneNumberInOtherPatients(newEntry.PhoneNumber) {
+			flag = false
+			outputString += "Вы ввели уже существующий номер телефона !"
+		}
 	}
 
 	/*newEntry.DateOfBirth*/
@@ -266,7 +280,7 @@ func validateUpdateJsonPatients(newEntry *models.Patient) (bool, string) {
 	return flag, outputString
 }
 
-func returnIndexOfTargetPhoneNumber(phone_number string, array *[]models.Patient) []int {
+func returnIndexOfTargetPhoneNumber(phone_number string, array *[]dto.Patient) []int {
 	outputArray := []int{}
 	for index, value := range *array {
 		log.Println(value.PhoneNumber, phone_number)
@@ -275,4 +289,14 @@ func returnIndexOfTargetPhoneNumber(phone_number string, array *[]models.Patient
 		}
 	}
 	return outputArray
+}
+
+func isTherePhoneNumberInOtherPatients(phone_number string) bool {
+	patients := ReadPatientsJsonFile()
+	for _, value := range patients {
+		if value.PhoneNumber == phone_number {
+			return true
+		}
+	}
+	return false
 }

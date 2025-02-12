@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"log"
-	"petprojectmed/models"
+	"petprojectmed/dto"
 	"petprojectmed/utils"
 	"regexp"
 	"sort"
@@ -14,12 +14,68 @@ import (
 	"golang.org/x/text/language"
 )
 
-type id struct {
-	ID []string `query:"id"`
+func GetDoctorsListID(c *fiber.Ctx) error {
+	paramsID := new(dto.ParamsListID)
+	err := c.ParamsParser(paramsID)
+
+	if err == nil {
+		doctors := ReadDoctorsJsonFile()
+		outputData := []dto.Doctor{}
+
+		sort.Ints(paramsID.ID)
+		paramsID.ID = utils.RemoveDuplicateInt(paramsID.ID)
+
+		for _, value := range paramsID.ID {
+			if value < len(doctors) && value >= 0 {
+				outputData = append(outputData, doctors[value])
+			} else {
+				return c.Status(fiber.StatusBadRequest).SendString("Список содержит несуществующий ID !")
+			}
+		}
+		log.Println(outputData)
+		return c.JSON(outputData)
+	} else {
+		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
+	}
+}
+
+func GetDoctorsListFilter(c *fiber.Ctx) error {
+	queryFilters := new(dto.QueryDoctorsListFilter)
+	err := c.QueryParser(queryFilters)
+	utils.CheckErr(err)
+
+	switch queryFilters.List {
+	case "all":
+		doctors := ReadDoctorsJsonFile()
+		return c.JSON(doctors)
+	case "filters":
+		//log.Println(queryFilters.Specializations)
+		//log.Println(len(queryFilters.Specializations))
+		if len(queryFilters.Specializations) != 0 && queryFilters.Specializations[0] != "" {
+			doctors := ReadDoctorsJsonFile()
+			arrayIndex := []int{}
+			for _, valSpecialization := range queryFilters.Specializations {
+				arrayIndex = append(arrayIndex, returnIndexOfTargetSpecialization(valSpecialization, &doctors)...)
+			}
+			sort.Ints(arrayIndex)
+			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
+			outputDoctors := []dto.Doctor{}
+			for _, value := range arrayIndex {
+				outputDoctors = append(outputDoctors, doctors[value])
+			}
+			return c.JSON(outputDoctors)
+		} else {
+			return c.Status(fiber.StatusBadRequest).SendString("Пустой список специальностей !")
+		}
+	case "":
+		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос ! !")
+	default:
+		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
+	}
 }
 
 func CreateDoctor(c *fiber.Ctx) error {
-	newEntry := new(models.Doctor)
+	newEntry := new(dto.Doctor)
 
 	if err := c.BodyParser(newEntry); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
@@ -30,8 +86,8 @@ func CreateDoctor(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(errorMessage)
 	}
 
-	newEntry.Specialization = utils.TrimSpaces(newEntry.Specialization)
 	caser := cases.Title(language.Russian)
+	newEntry.Specialization = caser.String(utils.TrimSpaces(newEntry.Specialization))
 	newEntry.Name = caser.String(newEntry.Name)
 	newEntry.Family = caser.String(newEntry.Family)
 
@@ -53,7 +109,7 @@ func UpdateDoctor(c *fiber.Ctx) error {
 	doctors := ReadDoctorsJsonFile()
 	if intIdValue >= 0 && intIdValue < len(doctors) {
 
-		newEntry := new(models.Doctor)
+		newEntry := new(dto.Doctor)
 		if err := c.BodyParser(newEntry); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
 		}
@@ -115,60 +171,7 @@ func DeleteDoctor(c *fiber.Ctx) error {
 	}
 }
 
-func GetDoctorsList(c *fiber.Ctx) error {
-
-	doctors := ReadDoctorsJsonFile()
-
-	m := c.Queries()
-	valAll, okAll := m["all"]
-	if okAll {
-
-		switch valAll {
-		case "":
-			return c.JSON(doctors)
-		case "filter":
-			valSpecialization, okSpecialization := m["specialization"]
-			log.Println(valSpecialization)
-			if okSpecialization && valSpecialization != "" {
-				arrayIndex := returnIndexOfTargetSpecialization(valSpecialization, &doctors)
-				log.Println(arrayIndex)
-				outputDoctors := []models.Doctor{}
-				for _, value := range arrayIndex {
-					outputDoctors = append(outputDoctors, doctors[value])
-				}
-				return c.JSON(outputDoctors)
-			}
-		}
-
-	}
-
-	structID := new(id)
-	flag := c.Query("id", "")
-	if flag != "" {
-		err := c.QueryParser(structID)
-		utils.CheckErr(err)
-		outputData := []models.Doctor{}
-		arrayID := []int{}
-		for _, value := range structID.ID {
-			id, err := strconv.Atoi(value)
-			if err == nil {
-				arrayID = append(arrayID, id)
-			}
-		}
-		sort.Ints(arrayID)
-		arrayID = utils.RemoveDuplicateInt(arrayID)
-		for _, value := range arrayID {
-			if value < len(doctors) {
-				outputData = append(outputData, doctors[value])
-			}
-		}
-		log.Println(outputData)
-		return c.JSON(outputData)
-	}
-	return c.Status(fiber.StatusBadRequest).SendString("Пустой или неправильный запрос !")
-}
-
-func validateNewJsonDoctors(newEntry *models.Doctor) (bool, string) {
+func validateNewJsonDoctors(newEntry *dto.Doctor) (bool, string) {
 	flag := true
 	outputString := ""
 
@@ -220,7 +223,7 @@ func validateNewJsonDoctors(newEntry *models.Doctor) (bool, string) {
 	return flag, outputString
 }
 
-func validateUpdateJsonDoctors(newEntry *models.Doctor) (bool, string) {
+func validateUpdateJsonDoctors(newEntry *dto.Doctor) (bool, string) {
 	flag := true
 	outputString := ""
 
@@ -270,7 +273,7 @@ func validateUpdateJsonDoctors(newEntry *models.Doctor) (bool, string) {
 	return flag, outputString
 }
 
-func returnIndexOfTargetSpecialization(specialization string, array *[]models.Doctor) []int {
+func returnIndexOfTargetSpecialization(specialization string, array *[]dto.Doctor) []int {
 	outputArray := []int{}
 	caser := cases.Lower(language.Russian)
 	for index, value := range *array {
