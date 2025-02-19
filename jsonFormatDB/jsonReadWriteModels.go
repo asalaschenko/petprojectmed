@@ -1,4 +1,4 @@
-package dto
+package jsonFormatDB
 
 import "time"
 
@@ -28,4 +28,11 @@ type Appointment struct {
 	PatientID       int       `json:"patientID"`
 	PatientInitials string    `json:"patientInitials"`
 	DateAppointment time.Time `json:"dateAppointment"`
+}
+
+type InputJsonAppointment struct {
+	DoctorID  string `json:"doctorsID"`
+	PatientID string `json:"patientsID"`
+	Date      string `json:"data"`
+	Time      string `json:"time"`
 }

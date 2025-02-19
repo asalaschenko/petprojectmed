@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"petprojectmed/dto"
 	"petprojectmed/utils"
-	"regexp"
+	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,24 +19,47 @@ import (
 func GetPatientsListID(c *fiber.Ctx) error {
 	paramsID := new(dto.ParamsListID)
 	err := c.ParamsParser(paramsID)
+	utils.CheckErr(err)
+
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
 
 	if err == nil {
-		patients := ReadPatientsJsonFile()
-		outputData := []dto.Patient{}
-
 		sort.Ints(paramsID.ID)
 		paramsID.ID = utils.RemoveDuplicateInt(paramsID.ID)
 
-		for _, value := range paramsID.ID {
-			if value < len(patients) && value >= 0 {
-				outputData = append(outputData, patients[value])
-			} else {
-				return c.Status(fiber.StatusBadRequest).SendString("Список содержит несуществующий ID !")
-			}
-		}
-		log.Println(outputData)
+		outputData := GetPatientsByID(conn, paramsID.ID)
 		return c.JSON(outputData)
 	} else {
+		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
+	}
+}
+
+func OldGetPatientsListFilter(c *fiber.Ctx) error {
+	queryFilters := new(dto.QueryPatientsListFilter)
+	err := c.QueryParser(queryFilters)
+	utils.CheckErr(err)
+
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	switch queryFilters.List {
+	case "all":
+		patients := GetAllPatients(conn)
+		return c.JSON(patients)
+	case "filter":
+		if len(queryFilters.PhoneNumbers) != 0 && queryFilters.PhoneNumbers[0] != "" {
+			arrayIndex := returnIndexOfTargetPhoneNumber(queryFilters.PhoneNumbers)
+			sort.Ints(arrayIndex)
+			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
+			outputPatients := GetPatientsByID(conn, arrayIndex)
+			return c.JSON(outputPatients)
+		} else {
+			return c.Status(fiber.StatusBadRequest).SendString("Пустой список номеров или неправильный запрос !")
+		}
+	case "":
+		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос или неправильный запрос !")
+	default:
 		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
 	}
 }
@@ -44,56 +69,99 @@ func GetPatientsListFilter(c *fiber.Ctx) error {
 	err := c.QueryParser(queryFilters)
 	utils.CheckErr(err)
 
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
 	switch queryFilters.List {
 	case "all":
-		patients := ReadPatientsJsonFile()
+		patients := GetAllPatients(conn)
 		return c.JSON(patients)
-	case "filters":
+	case "filter":
+		resultArray := [][]int{}
+		flag := false
+
 		if len(queryFilters.PhoneNumbers) != 0 && queryFilters.PhoneNumbers[0] != "" {
-			patients := ReadPatientsJsonFile()
-			arrayIndex := []int{}
-			for _, valPhoneNumber := range queryFilters.PhoneNumbers {
-				arrayIndex = append(arrayIndex, returnIndexOfTargetPhoneNumber(valPhoneNumber, &patients)...)
+			flag = true
+
+			for index, value := range queryFilters.PhoneNumbers {
+				utils.TransformCharsForPhoneNumber(&value)
+				queryFilters.PhoneNumbers[index] = value
 			}
+
+			arrayIndex := returnIndexOfTargetPhoneNumber(queryFilters.PhoneNumbers)
 			sort.Ints(arrayIndex)
 			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
-			outputPatients := []dto.Patient{}
-			for _, value := range arrayIndex {
-				outputPatients = append(outputPatients, patients[value])
-			}
-			return c.JSON(outputPatients)
-		} else {
-			return c.Status(fiber.StatusBadRequest).SendString("Пустой список специальностей !")
+			resultArray = append(resultArray, arrayIndex)
 		}
+
+		if len(queryFilters.DatesOfBirth) != 0 && queryFilters.DatesOfBirth[0] != "" {
+			flag = true
+			arrayIndex := []int{}
+			for _, value := range queryFilters.DatesOfBirth {
+				utils.TransformCharsForDateofBirth(&value)
+
+				if date, err := time.Parse("2006-01-02", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01-02")...)
+				} else if date, err := time.Parse("2006-01", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01")...)
+				} else if date, err := time.Parse("2006", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006")...)
+				} else if date, err := time.Parse("01-2006", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "01-2006")...)
+				} else if date, err := time.Parse("02-01-2006", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "02-01-2006")...)
+				}
+			}
+
+			sort.Ints(arrayIndex)
+			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
+			resultArray = append(resultArray, arrayIndex)
+		}
+
+		if !flag {
+			return c.Status(fiber.StatusBadRequest).SendString("Список фильтров пуст !")
+		}
+
+		outputArray := findIntersectionOfSetsValues(resultArray)
+
+		if len(outputArray) == 0 {
+			return c.Status(fiber.StatusOK).SendString("Нет данных с такими параметрами !")
+		}
+
+		outputPatients := GetPatientsByID(conn, outputArray)
+		return c.JSON(outputPatients)
 	case "":
-		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос !")
+		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос или неправильный запрос !")
 	default:
-		return c.Status(fiber.StatusBadRequest).SendString("Пустой или неправильный запрос !")
+		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
 	}
 }
 
 func CreatePatient(c *fiber.Ctx) error {
-	newEntry := new(dto.Patient)
+	inputJson := new(dto.Patient)
 
-	if err := c.BodyParser(newEntry); err != nil {
+	if err := c.BodyParser(inputJson); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
 	}
 
-	isValidData, errorMessage := validateNewJsonPatients(newEntry)
+	isValidData, errorMessage := validateInputJsonPatientsForCreate(inputJson)
 	if !isValidData {
 		return c.Status(fiber.StatusBadRequest).SendString(errorMessage)
 	}
 
-	// /newEntry.PhoneNumber = utils.TrimSpaces(newEntry.PhoneNumber)
 	caser := cases.Title(language.Russian)
-	newEntry.Name = caser.String(newEntry.Name)
-	newEntry.Family = caser.String(newEntry.Family)
-	newEntry.Gender = caser.String(newEntry.Gender)
+	newEntryDB := new(dto.PatientTable)
+	newEntryDB.Name = caser.String(inputJson.Name)
+	newEntryDB.Family = caser.String(inputJson.Family)
+	newEntryDB.DateOfBirth, _ = time.Parse(time.DateOnly, inputJson.DateOfBirth)
+	caser = cases.Lower(language.Russian)
+	newEntryDB.Gender = caser.String(inputJson.Gender)
+	newEntryDB.PhoneNumber = inputJson.PhoneNumber
 
-	patients := ReadPatientsJsonFile()
-	newEntry.ID = len(patients)
-	patients = append(patients, *newEntry)
-	WritePatientsJsonFile(patients)
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	InsertPatientByID(conn, newEntryDB)
 	return c.Status(fiber.StatusCreated).SendString("Запись прошла успешно !")
 }
 
@@ -105,41 +173,55 @@ func UpdatePatient(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат ID")
 	}
 
-	patients := ReadPatientsJsonFile()
-	if intIdValue >= 0 && intIdValue < len(patients) {
+	isValidId := validateInputPatientID(intIdValue)
 
-		newEntry := new(dto.Patient)
-		if err := c.BodyParser(newEntry); err != nil {
+	if isValidId {
+
+		inputJson := new(dto.Patient)
+		if err := c.BodyParser(inputJson); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
 		}
 
-		isValidData, errorMessage := validateUpdateJsonPatients(newEntry)
+		isValidData, errorMessage := validateInputJsonPatientsForUpdate(inputJson)
 		if !isValidData {
 			return c.Status(fiber.StatusBadRequest).SendString(errorMessage)
 		}
+
+		conn := GetConnectionDB()
+		defer conn.Close(context.Background())
+
+		values := []int{}
+		values = append(values, intIdValue)
+		pointer := GetPatientsByID(conn, values)
+		updateEntryPatients := *pointer
+		updateEntryPatient := updateEntryPatients[0]
+
 		caser := cases.Title(language.Russian)
 
-		if newEntry.Name != "" {
-			patients[intIdValue].Name = caser.String(newEntry.Name)
+		if inputJson.Name != "" {
+			updateEntryPatient.Name = caser.String(inputJson.Name)
 		}
 
-		if newEntry.Family != "" {
-			patients[intIdValue].Family = caser.String(newEntry.Family)
+		if inputJson.Family != "" {
+			updateEntryPatient.Family = caser.String(inputJson.Family)
 		}
 
-		if newEntry.Gender != "" {
-			patients[intIdValue].Gender = caser.String(newEntry.Gender)
+		if inputJson.DateOfBirth != "" {
+			value, _ := time.Parse(time.DateOnly, inputJson.DateOfBirth)
+			updateEntryPatient.DateOfBirth = value
 		}
 
-		if newEntry.DateOfBirth != "" {
-			patients[intIdValue].DateOfBirth = newEntry.DateOfBirth
+		caser = cases.Lower(language.Russian)
+		if inputJson.Gender != "" {
+			inputJson.Gender = caser.String(inputJson.Gender)
+			updateEntryPatient.Gender = inputJson.Gender
 		}
 
-		if newEntry.PhoneNumber != "" {
-			patients[intIdValue].PhoneNumber = newEntry.PhoneNumber
+		if inputJson.PhoneNumber != "" {
+			updateEntryPatient.PhoneNumber = inputJson.PhoneNumber
 		}
 
-		WritePatientsJsonFile(patients)
+		UpdatePatientByID(conn, intIdValue, &updateEntryPatient)
 		return c.Status(fiber.StatusOK).SendString("Запись с id=" + strconv.Itoa(intIdValue) + " успешно обновлена !")
 	} else {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный ID")
@@ -154,149 +236,84 @@ func DeletePatient(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат ID")
 	}
 
-	patients := ReadPatientsJsonFile()
-	if intIdValue >= 0 && intIdValue < len(patients) {
-		patient := patients[intIdValue]
-		patients = append(patients[:intIdValue], patients[intIdValue+1:]...)
-		for index := range patients {
-			patients[index].ID = index
-		}
-		WritePatientsJsonFile(patients)
-		return c.JSON(patient)
+	isValidId := validateInputPatientID(intIdValue)
+
+	if isValidId {
+		conn := GetConnectionDB()
+		defer conn.Close(context.Background())
+
+		values := []int{}
+		values = append(values, intIdValue)
+		entryPatient := GetPatientsByID(conn, values)
+
+		DeletePatientByID(conn, intIdValue)
+
+		return c.JSON(entryPatient)
 	} else {
 		return c.Status(fiber.StatusBadRequest).SendString("Неверный ID")
 	}
 }
 
-func validateNewJsonPatients(newEntry *dto.Patient) (bool, string) {
-	flag := true
-	outputString := ""
-	caser := cases.Lower(language.Russian)
-
-	/*newEntry.Name*/
-	if newEntry.Name == "" {
-		flag = false
-		outputString += "Пропущено имя !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Name) {
-		flag = false
-		outputString += "Имя должно содержать только буквы (кириллица) !" + "\n"
-	}
-
-	/*newEntry.Family*/
-	if newEntry.Family == "" {
-		flag = false
-		outputString += "Пропущена фамилия !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Family) {
-		flag = false
-		outputString += "Фамилия должна содержать только буквы (кириллица) !" + "\n"
-	}
-
-	/*newEntry.PhoneNumber*/
-	if newEntry.PhoneNumber == "" {
-		flag = false
-		outputString += "Пропущена специализация !" + "\n"
-	}
-	if !regexp.MustCompile(`^7[0-9]{10}$`).MatchString(newEntry.PhoneNumber) {
-		flag = false
-		outputString += "Номер телефона должен иметь следующий формат: 7xxxxxxxxxx !" + "\n"
-	}
-	if isTherePhoneNumberInOtherPatients(newEntry.PhoneNumber) {
-		flag = false
-		outputString += "Вы ввели уже существующий номер телефона !"
-	}
-
-	/*newEntry.DateOfBirth*/
-	val, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
-	if err == nil {
-		newEntry.DateOfBirth = val.String()
-	} else {
-		flag = false
-		outputString += "Неверный формат либо пропущена дата рождения !" + "\n"
-	}
-
-	/*newEntry.Gender*/
-	if caser.String(newEntry.Gender) != "мужской" && caser.String(newEntry.Gender) != "женский" {
-		flag = false
-		outputString += "Неверное значение пола (\"мужской\" или \"женский\") !" + "\n"
-	}
-
-	return flag, outputString
-}
-
-func validateUpdateJsonPatients(newEntry *dto.Patient) (bool, string) {
-	flag := true
-	outputString := ""
-	caser := cases.Lower(language.Russian)
-
-	/*newEntry.Name*/
-	if newEntry.Name != "" {
-		if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Name) {
-			flag = false
-			outputString += "Имя должно содержать только буквы (кириллица) !" + "\n"
-		}
-	}
-
-	/*newEntry.Family*/
-	if newEntry.Family != "" {
-		if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Family) {
-			flag = false
-			outputString += "Фамилия должна содержать только буквы (кириллица) !" + "\n"
-		}
-	}
-
-	/*newEntry.PhoneNumber*/
-	if newEntry.PhoneNumber != "" {
-		if !regexp.MustCompile(`^7[0-9]{10}$`).MatchString(newEntry.PhoneNumber) {
-			flag = false
-			outputString += "Номер телефона должен иметь следующий формат: 7xxxxxxxxxx !" + "\n"
-		}
-		if isTherePhoneNumberInOtherPatients(newEntry.PhoneNumber) {
-			flag = false
-			outputString += "Вы ввели уже существующий номер телефона !"
-		}
-	}
-
-	/*newEntry.DateOfBirth*/
-	if newEntry.DateOfBirth != "" {
-		val, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
-		if err == nil {
-			newEntry.DateOfBirth = val.String()
-		} else {
-			flag = false
-			outputString += "Неверный формат либо пропущена дата рождения !" + "\n"
-		}
-	}
-
-	/*newEntry.Cabinet*/
-	if newEntry.Gender != "" {
-		if caser.String(newEntry.Gender) != "мужской" && caser.String(newEntry.Gender) != "женский" {
-			flag = false
-			outputString += "Неверное значение пола (\"мужской\" или \"женский\") !" + "\n"
-		}
-	}
-
-	return flag, outputString
-}
-
-func returnIndexOfTargetPhoneNumber(phone_number string, array *[]dto.Patient) []int {
+func returnIndexOfTargetPhoneNumber(phoneNunmbers []string) []int {
 	outputArray := []int{}
-	for index, value := range *array {
-		log.Println(value.PhoneNumber, phone_number)
-		if value.PhoneNumber == phone_number {
-			outputArray = append(outputArray, index)
-		}
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+	patients := GetPatientsByPhoneNumber(conn, phoneNunmbers)
+
+	for _, entry := range *patients {
+		outputArray = append(outputArray, entry.ID)
 	}
+
 	return outputArray
 }
 
-func isTherePhoneNumberInOtherPatients(phone_number string) bool {
-	patients := ReadPatientsJsonFile()
-	for _, value := range patients {
-		if value.PhoneNumber == phone_number {
-			return true
+func returnIndexOfTargetDateOfBirth(dateOfBirth time.Time, layout string) []int {
+	outputArray := []int{}
+	funcArray := [3]func(time.Time, time.Time) bool{compareYear, compareMonth, compareDay}
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+	patients := GetAllPatients(conn)
+	form := strings.Split(layout, "-")
+
+	for _, value := range *patients {
+		flag := true
+		for index := range len(form) {
+			flag = flag && funcArray[index](dateOfBirth, value.DateOfBirth)
+		}
+		if flag {
+			outputArray = append(outputArray, value.ID)
 		}
 	}
-	return false
+
+	log.Println(outputArray)
+	return outputArray
+}
+
+func compareYear(date1 time.Time, date2 time.Time) bool {
+	return date1.Year() == date2.Year()
+}
+
+func compareMonth(date1 time.Time, date2 time.Time) bool {
+	return date1.Month() == date2.Month()
+}
+
+func compareDay(date1 time.Time, date2 time.Time) bool {
+	return date1.Day() == date2.Day()
+}
+
+func findIntersectionOfSetsValues(arrays [][]int) []int {
+	outputArray := []int{}
+	var count int = 0
+	for _, val1 := range arrays[0] {
+		for _, val2 := range arrays {
+			if slices.Contains(val2, val1) {
+				count++
+			}
+		}
+		if count == len(arrays) {
+			outputArray = append(outputArray, val1)
+		}
+		count = 0
+	}
+	return outputArray
 }

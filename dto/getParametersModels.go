@@ -11,6 +11,7 @@ type QueryDoctorsListFilter struct {
 
 type QueryPatientsListFilter struct {
 	List         string   `query:"list"`
+	DatesOfBirth []string `query: datesOfBirth`
 	PhoneNumbers []string `query:"phoneNumber"`
 }
 
@@ -19,11 +20,4 @@ type QuerySheduleListFilter struct {
 	DoctorID        []string `query:"doctorID"`
 	PatientID       []string `query:"patientID"`
 	DateAppointment []string `query:"dateAppointment"`
-}
-
-type InputJsonAppointment struct {
-	DoctorID  string `json:"doctorsID"`
-	PatientID string `json:"patientsID"`
-	Date      string `json:"data"`
-	Time      string `json:"time"`
 }
