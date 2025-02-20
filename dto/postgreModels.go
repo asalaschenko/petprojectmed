@@ -21,3 +21,19 @@ type PatientTable struct {
 	Gender      string
 	PhoneNumber string
 }
+
+type AppointmentTable struct {
+	ID              int
+	DoctorID        int
+	DoctorInitials  string
+	Specialization  string
+	PatientID       int
+	PatientInitials string
+	DateAppointment time.Time
+}
+
+type InsertAppointmentTable struct {
+	DoctorID        int
+	PatientID       int
+	DateAppointment time.Time
+}

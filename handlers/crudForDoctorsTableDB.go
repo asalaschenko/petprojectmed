@@ -70,7 +70,7 @@ func GetDoctorsBySpecialization(conn *pgx.Conn, doctorSpecialization []string) *
 	return doctors
 }
 
-func InsertDoctorByID(conn *pgx.Conn, doctor *dto.DoctorTable) {
+func InsertDoctor(conn *pgx.Conn, doctor *dto.DoctorTable) {
 	query := `
         INSERT INTO doctors (name, family, specialization, cabinet, dateofbirth) VALUES (@name, @family, @specialization, @cabinet, @dateofbirth)
     `

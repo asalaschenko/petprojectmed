@@ -1,7 +1,6 @@
 package dto
 
 type Doctor struct {
-	ID             int    `json:"id"`
 	Name           string `json:"name" `
 	Family         string `json:"family"`
 	Specialization string `json:"specialization"`
@@ -10,10 +9,16 @@ type Doctor struct {
 }
 
 type Patient struct {
-	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Family      string `json:"family"`
 	DateOfBirth string `json:"dateOfBirth"`
 	Gender      string `json:"gender"`
 	PhoneNumber string `json:"phoneNumber"`
+}
+
+type Appointment struct {
+	DoctorID  string `json:"doctorsID"`
+	PatientID string `json:"patientsID"`
+	Date      string `json:"data"`
+	Time      string `json:"time"`
 }

@@ -218,9 +218,9 @@ func validateNewJsonAppointment(val *InputJsonAppointment) (bool, string) {
 
 func isFreeHourOfAppointment(val *InputJsonAppointment) bool {
 	appointments := ReadScheduleJsonFile()
+	intDoctorID, _ := strconv.Atoi(val.DoctorID)
 
 	for _, value := range appointments {
-		intDoctorID, _ := strconv.Atoi(val.DoctorID)
 		if value.DoctorID == intDoctorID {
 			dateValue, _ := time.Parse(time.DateTime, val.Date+" "+val.Time+":00")
 			d := time.Hour

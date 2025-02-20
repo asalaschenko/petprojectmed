@@ -5,13 +5,14 @@ import (
 	"log"
 	"petprojectmed/dto"
 	"petprojectmed/utils"
-	"slices"
 	"sort"
+	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func CreateAppointment(c *fiber.Ctx) error {
+func GetAppointments(c *fiber.Ctx) error {
 	queryFilters := new(dto.QuerySheduleListFilter)
 	err := c.QueryParser(queryFilters)
 	utils.CheckErr(err)
@@ -19,24 +20,27 @@ func CreateAppointment(c *fiber.Ctx) error {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 
+	log.Println(queryFilters.List)
+
 	switch queryFilters.List {
 	case "all":
-		appointments := ReadScheduleJsonFile()
+		appointments := GetAllAppointments(conn)
 		return c.JSON(appointments)
 	case "filter":
 		resultArray := [][]int{}
 		flag := false
-		schedule := ReadScheduleJsonFile()
+		schedule := GetAllAppointments(conn)
 
 		if len(queryFilters.DoctorID) != 0 && queryFilters.DoctorID[0] != "" {
 			flag = true
 			arrayIndex := []int{}
+
 			for _, valID := range queryFilters.DoctorID {
-				arrayIndex = append(arrayIndex, returnIndexOfTargetDoctorID(valID, &schedule)...)
+				arrayIndex = append(arrayIndex, returnIndexOfTargetDoctorID(valID, schedule)...)
 			}
+
 			sort.Ints(arrayIndex)
 			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
-			log.Println("queryFilters.DoctorID", arrayIndex)
 			resultArray = append(resultArray, arrayIndex)
 		}
 
@@ -44,7 +48,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 			flag = true
 			arrayIndex := []int{}
 			for _, valID := range queryFilters.PatientID {
-				arrayIndex = append(arrayIndex, returnIndexOfTargetPatientID(valID, &schedule)...)
+				arrayIndex = append(arrayIndex, returnIndexOfTargetPatientID(valID, schedule)...)
 			}
 			sort.Ints(arrayIndex)
 			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
@@ -57,11 +61,10 @@ func CreateAppointment(c *fiber.Ctx) error {
 			arrayIndex := []int{}
 			for _, valDateTime := range queryFilters.DateAppointment {
 				valDateTime += ":00"
-				arrayIndex = append(arrayIndex, returnIndexOfTargetDateTime(valDateTime, &schedule)...)
+				arrayIndex = append(arrayIndex, returnIndexOfTargetDateTime(valDateTime, schedule)...)
 			}
 			sort.Ints(arrayIndex)
 			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
-			log.Println("queryFilters.DateAppointment", arrayIndex)
 			resultArray = append(resultArray, arrayIndex)
 		}
 
@@ -69,30 +72,119 @@ func CreateAppointment(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).SendString("Список фильтров пуст !")
 		}
 
-		outputArray := []int{}
-		var count int = 0
-		for _, val1 := range resultArray[0] {
-			for _, val2 := range resultArray {
-				if slices.Contains(val2, val1) {
-					count++
-				}
-			}
-			if count == len(resultArray) {
-				outputArray = append(outputArray, val1)
-			}
-			count = 0
+		outputArray := utils.FindIntersectionOfSetsValues(resultArray)
+		if len(outputArray) == 0 {
+			return c.Status(fiber.StatusOK).SendString("Нет данных с такими параметрами !")
 		}
 
-		log.Println(outputArray)
-
-		outputAppointments := []Appointment{}
-		for _, value := range outputArray {
-			outputAppointments = append(outputAppointments, schedule[value])
-		}
+		outputAppointments := GetAppointmentsByID(conn, outputArray)
 		return c.JSON(outputAppointments)
 	case "":
 		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос ! !")
 	default:
 		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
+	}
+}
+
+func CreateAppointment(c *fiber.Ctx) error {
+
+	newEntryInput := new(dto.Appointment)
+
+	if err := c.BodyParser(newEntryInput); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат запроса")
+	}
+
+	isValidData, errorMessage := validateInputJsonAppointment(newEntryInput)
+	if !isValidData {
+		return c.Status(fiber.StatusBadRequest).SendString(errorMessage)
+	}
+
+	isFreeHour := isFreeHourOfAppointment(newEntryInput)
+	if !isFreeHour {
+		return c.Status(fiber.StatusBadRequest).SendString("В графике приёма указанного врача данное время занято !")
+	}
+
+	newEntryOutput := new(dto.InsertAppointmentTable)
+	_, timeValue := utils.CheckTimeValue(newEntryInput.Time)
+	dateValue, _ := time.Parse(time.DateTime, newEntryInput.Date+" "+timeValue.Format(time.TimeOnly))
+	trunc := time.Hour
+	dateValue = dateValue.Truncate(trunc)
+	newEntryOutput.DateAppointment = dateValue
+	newEntryOutput.DoctorID, _ = strconv.Atoi(newEntryInput.DoctorID)
+	log.Println(newEntryOutput.DoctorID)
+	newEntryOutput.PatientID, _ = strconv.Atoi(newEntryInput.PatientID)
+	log.Println(newEntryOutput.PatientID)
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	InsertAppointment(conn, newEntryOutput)
+	return c.SendString("Готово")
+}
+
+func returnIndexOfTargetDoctorID(ID string, array *[]dto.AppointmentTable) []int {
+	outputArray := []int{}
+	intID, err := strconv.Atoi(ID)
+	if err == nil {
+		for _, value := range *array {
+			if value.DoctorID == intID {
+				outputArray = append(outputArray, value.ID)
+			}
+		}
+	}
+	return outputArray
+}
+
+func returnIndexOfTargetPatientID(ID string, array *[]dto.AppointmentTable) []int {
+	outputArray := []int{}
+	intID, err := strconv.Atoi(ID)
+	if err == nil {
+		for _, value := range *array {
+			if value.PatientID == intID {
+				outputArray = append(outputArray, value.ID)
+			}
+		}
+	}
+	return outputArray
+}
+
+func returnIndexOfTargetDateTime(dateTime string, array *[]dto.AppointmentTable) []int {
+	outputArray := []int{}
+	dateTimeValue, err := time.Parse(time.DateTime, dateTime)
+
+	if err == nil {
+		trunc := time.Hour
+		dateTimeValue = dateTimeValue.Truncate(trunc)
+		for _, value := range *array {
+			if value.DateAppointment.Equal(dateTimeValue) {
+				outputArray = append(outputArray, value.ID)
+			}
+		}
+	}
+	return outputArray
+}
+
+func DeleteAppointment(c *fiber.Ctx) error {
+	idValue := c.Params("id")
+
+	intIdValue, err := strconv.Atoi(idValue)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("Неверный формат ID")
+	}
+
+	isValidId := validateInputAppointmentID(intIdValue)
+
+	if isValidId {
+		conn := GetConnectionDB()
+		defer conn.Close(context.Background())
+
+		values := []int{}
+		values = append(values, intIdValue)
+		entryAppointment := GetAppointmentsByID(conn, values)
+
+		DeleteAppointmentByID(conn, intIdValue)
+
+		return c.JSON(entryAppointment)
+	} else {
+		return c.Status(fiber.StatusBadRequest).SendString("Неверный ID")
 	}
 }

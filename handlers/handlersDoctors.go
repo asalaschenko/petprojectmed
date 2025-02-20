@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"petprojectmed/dto"
 	"petprojectmed/utils"
 	"sort"
@@ -31,7 +32,8 @@ func GetDoctorsListID(c *fiber.Ctx) error {
 	}
 }
 
-func GetDoctorsListFilter(c *fiber.Ctx) error {
+func oldGetDoctorsListFilter(c *fiber.Ctx) error {
+	log.Println("OK")
 	queryFilters := new(dto.QueryDoctorsListFilter)
 	err := c.QueryParser(queryFilters)
 	utils.CheckErr(err)
@@ -53,6 +55,80 @@ func GetDoctorsListFilter(c *fiber.Ctx) error {
 		} else {
 			return c.Status(fiber.StatusBadRequest).SendString("Пустой список специальностей !")
 		}
+	case "":
+		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос или неправльный запрос !")
+	default:
+		return c.Status(fiber.StatusBadRequest).SendString("Неправильный запрос !")
+	}
+}
+
+func GetDoctorsListFilter(c *fiber.Ctx) error {
+	log.Println("OK")
+	queryFilters := new(dto.QueryDoctorsListFilter)
+	err := c.QueryParser(queryFilters)
+	utils.CheckErr(err)
+
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	switch queryFilters.List {
+	case "all":
+		doctors := GetAllDoctors(conn)
+		return c.JSON(doctors)
+	case "filter":
+		resultArray := [][]int{}
+		flag := false
+
+		if len(queryFilters.Specializations) != 0 && queryFilters.Specializations[0] != "" {
+			flag = true
+
+			caser := cases.Lower(language.Russian)
+			for index, value := range queryFilters.Specializations {
+				queryFilters.Specializations[index] = caser.String(value)
+			}
+
+			arrayIndex := returnIndexOfTargetSpecialization(queryFilters.Specializations)
+			sort.Ints(arrayIndex)
+			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
+			resultArray = append(resultArray, arrayIndex)
+		}
+
+		if len(queryFilters.DatesOfBirth) != 0 && queryFilters.DatesOfBirth[0] != "" {
+			flag = true
+			arrayIndex := []int{}
+			for _, value := range queryFilters.DatesOfBirth {
+				utils.TransformCharsForDateofBirth(&value)
+
+				if date, err := time.Parse("2006-01-02", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01-02")...)
+				} else if date, err := time.Parse("2006-01", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01")...)
+				} else if date, err := time.Parse("2006", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006")...)
+				} else if date, err := time.Parse("01-2006", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "01-2006")...)
+				} else if date, err := time.Parse("02-01-2006", value); err == nil {
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "02-01-2006")...)
+				}
+			}
+
+			sort.Ints(arrayIndex)
+			arrayIndex = utils.RemoveDuplicateInt(arrayIndex)
+			resultArray = append(resultArray, arrayIndex)
+		}
+
+		if !flag {
+			return c.Status(fiber.StatusBadRequest).SendString("Список фильтров пуст !")
+		}
+
+		outputArray := utils.FindIntersectionOfSetsValues(resultArray)
+
+		if len(outputArray) == 0 {
+			return c.Status(fiber.StatusOK).SendString("Нет данных с такими параметрами !")
+		}
+
+		outputDoctors := GetDoctorsByID(conn, outputArray)
+		return c.JSON(outputDoctors)
 	case "":
 		return c.Status(fiber.StatusBadRequest).SendString("Пустой запрос или неправльный запрос !")
 	default:
@@ -84,7 +160,7 @@ func CreateDoctor(c *fiber.Ctx) error {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 
-	InsertDoctorByID(conn, newEntryDB)
+	InsertDoctor(conn, newEntryDB)
 	return c.Status(fiber.StatusCreated).SendString("Запись прошла успешно !")
 }
 

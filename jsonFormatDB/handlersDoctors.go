@@ -49,8 +49,6 @@ func GetDoctorsListFilter(c *fiber.Ctx) error {
 		doctors := ReadDoctorsJsonFile()
 		return c.JSON(doctors)
 	case "filters":
-		//log.Println(queryFilters.Specializations)
-		//log.Println(len(queryFilters.Specializations))
 		if len(queryFilters.Specializations) != 0 && queryFilters.Specializations[0] != "" {
 			doctors := ReadDoctorsJsonFile()
 			arrayIndex := []int{}

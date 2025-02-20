@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"context"
+	"math"
 	"petprojectmed/dto"
+	"petprojectmed/utils"
 	"regexp"
+	"strconv"
 	"time"
 
 	"golang.org/x/text/cases"
@@ -18,8 +21,7 @@ func validateInputJsonDoctorsForCreate(newEntry *dto.Doctor) (bool, string) {
 	if newEntry.Name == "" {
 		flag = false
 		outputString += "Пропущено имя !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Name) {
+	} else if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Name) {
 		flag = false
 		outputString += "Имя должно содержать только буквы (кириллица) !" + "\n"
 	}
@@ -28,8 +30,7 @@ func validateInputJsonDoctorsForCreate(newEntry *dto.Doctor) (bool, string) {
 	if newEntry.Family == "" {
 		flag = false
 		outputString += "Пропущена фамилия !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Family) {
+	} else if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Family) {
 		flag = false
 		outputString += "Фамилия должна содержать только буквы (кириллица) !" + "\n"
 	}
@@ -38,8 +39,7 @@ func validateInputJsonDoctorsForCreate(newEntry *dto.Doctor) (bool, string) {
 	if newEntry.Specialization == "" {
 		flag = false
 		outputString += "Пропущена специализация !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я\s]`).MatchString(newEntry.Specialization) {
+	} else if regexp.MustCompile(`[^а-яА-Я\s]`).MatchString(newEntry.Specialization) {
 		flag = false
 		outputString += "Специализация должна содержать только буквы (кириллица) и пробелы !" + "\n"
 	}
@@ -128,8 +128,7 @@ func validateInputJsonPatientsForCreate(newEntry *dto.Patient) (bool, string) {
 	if newEntry.Name == "" {
 		flag = false
 		outputString += "Пропущено имя !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Name) {
+	} else if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Name) {
 		flag = false
 		outputString += "Имя должно содержать только буквы (кириллица) !" + "\n"
 	}
@@ -138,8 +137,7 @@ func validateInputJsonPatientsForCreate(newEntry *dto.Patient) (bool, string) {
 	if newEntry.Family == "" {
 		flag = false
 		outputString += "Пропущена фамилия !" + "\n"
-	}
-	if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Family) {
+	} else if regexp.MustCompile(`[^а-яА-Я]`).MatchString(newEntry.Family) {
 		flag = false
 		outputString += "Фамилия должна содержать только буквы (кириллица) !" + "\n"
 	}
@@ -148,12 +146,10 @@ func validateInputJsonPatientsForCreate(newEntry *dto.Patient) (bool, string) {
 	if newEntry.PhoneNumber == "" {
 		flag = false
 		outputString += "Пропущен номер телефона !" + "\n"
-	}
-	if !regexp.MustCompile(`^7[0-9]{10}$`).MatchString(newEntry.PhoneNumber) {
+	} else if !regexp.MustCompile(`^7[0-9]{10}$`).MatchString(newEntry.PhoneNumber) {
 		flag = false
 		outputString += "Номер телефона должен иметь следующий формат: 7xxxxxxxxxx !" + "\n"
-	}
-	if isTherePhoneNumberInOtherPatients(newEntry.PhoneNumber) {
+	} else if isTherePhoneNumberInOtherPatients(newEntry.PhoneNumber) {
 		flag = false
 		outputString += "Вы ввели уже существующий номер телефона !" + "\n"
 	}
@@ -241,11 +237,127 @@ func isTherePhoneNumberInOtherPatients(phoneNumber string) bool {
 	return false
 }
 
-func validateInputPatientID(doctorID int) bool {
+func validateInputPatientID(patientID int) bool {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 	entries := GetAllPatients(conn)
-	if doctorID > 0 && doctorID <= len(*entries) {
+	if patientID > 0 && patientID <= len(*entries) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func validateInputJsonAppointment(val *dto.Appointment) (bool, string) {
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	doctors := GetAllDoctors(conn)
+	patients := GetAllPatients(conn)
+	flag := true
+	outputString := ""
+
+	/*val.DoctorsID*/
+	if val.DoctorID == "" {
+		flag = false
+		outputString += "Пропущен ID доктора !" + "\n"
+	} else {
+		doctroID, err := strconv.Atoi(val.DoctorID)
+		if err != nil {
+			flag = false
+			outputString += "Неверный формат ID доктора !" + "\n"
+		} else if doctroID < 0 || doctroID >= len(*doctors) {
+			flag = false
+			outputString += "Неверный ID доктора !" + "\n"
+		}
+	}
+
+	/*val.PatientID*/
+	if val.PatientID == "" {
+		flag = false
+		outputString += "Пропущен ID пациента !" + "\n"
+	} else {
+		patientID, err := strconv.Atoi(val.PatientID)
+		if err != nil {
+			flag = false
+			outputString += "Неверный формат ID пациента !" + "\n"
+		} else if patientID < 0 || patientID >= len(*patients) {
+			flag = false
+			outputString += "Неверный ID пациента !" + "\n"
+		}
+	}
+
+	/*val.Date*/
+	if val.Date == "" {
+		flag = false
+		outputString += "Пропущена дата приёма !" + "\n"
+	} else {
+		date, err := time.Parse(time.DateOnly, val.Date)
+		if err != nil {
+			flag = false
+			outputString += "Неверный формат даты ! Формат должен быть гггг-мм-дд !" + "\n"
+		} else if int(date.Weekday()) == 6 || int(date.Weekday()) == 0 {
+			flag = false
+			outputString += "Выходной день !" + "\n"
+		}
+		t := time.Now()
+		if !t.Before(date) {
+			flag = false
+			outputString += "Выбрана либо текущая дата, либо более более ранняя ! Выберите предстоящую дату !" + "\n"
+		} else {
+			diff := t.Sub(date) / time.Hour
+			diffFloat := math.Abs(float64(diff / 24))
+			//log.Println(diffFloat)
+			if diffFloat > 90 {
+				flag = false
+				outputString += "Запись открыта только на 90 дней вперёд !" + "\n"
+			}
+		}
+	}
+
+	/*val.Time*/
+	if val.Time == "" {
+		flag = false
+		outputString += "Пропущено время приёма !" + "\n"
+	} else {
+		valid, timeValue := utils.CheckTimeValue(val.Time)
+		if !valid {
+			flag = false
+			outputString += "Неверный формат времени ! Формат должен быть чч:мм !" + "\n"
+		} else if timeValue.Hour() < 9 || timeValue.Hour() == 12 || timeValue.Hour() > 18 {
+			flag = false
+			outputString += "Врач принимает с 9-00 до 19-00, перерыв в 12-00 !" + "\n"
+		}
+	}
+
+	return flag, outputString
+}
+
+func isFreeHourOfAppointment(val *dto.Appointment) bool {
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	appointments := GetAllAppointments(conn)
+
+	for _, value := range *appointments {
+		intDoctorID, _ := strconv.Atoi(val.DoctorID)
+		if value.DoctorID == intDoctorID {
+			dateValue, _ := time.Parse(time.DateTime, val.Date+" "+val.Time+":00")
+			d := time.Hour
+			dateValue = dateValue.Truncate(d)
+			if value.DateAppointment.Equal(dateValue) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func validateInputAppointmentID(appointmentID int) bool {
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+	entries := GetAllAppointments(conn)
+	if appointmentID > 0 && appointmentID <= len(*entries) {
 		return true
 	} else {
 		return false

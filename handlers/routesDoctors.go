@@ -9,14 +9,14 @@ import (
 func RegisterRoutesDoctors(app *fiber.App, port string) {
 	if port == "3000" {
 		doctors := app.Group("/doctors")
+		schedule := doctors.Group("/schedule")
+		schedule.Get("/", GetAppointments)
+		schedule.Post("/", CreateAppointment)
 		doctors.Get("/", GetDoctorsListFilter)
 		doctors.Get("/:id", GetDoctorsListID)
 		doctors.Post("/", CreateDoctor)
 		doctors.Delete("/:id", DeleteDoctor)
 		doctors.Put("/:id", UpdateDoctor)
-
-		//doctors.Get("/schedule", GetAppointments)
-		//doctors.Post("/schedule", CreateAppointment)
 	} else {
 		doctors := app.Group("/doctors")
 		doctors.Get("/", jsonFormatDB.GetDoctorsListFilter)

@@ -47,7 +47,7 @@ func GetPatientsByID(conn *pgx.Conn, patientID []int) *[]dto.PatientTable {
 	return patients
 }
 
-func InsertPatientByID(conn *pgx.Conn, patient *dto.PatientTable) {
+func InsertPatient(conn *pgx.Conn, patient *dto.PatientTable) {
 	query := `
         INSERT INTO patients (name, family, dateofbirth, gender, phonenumber) VALUES (@name, @family, @dateofbirth, @gender, @phoneNumber)
     `

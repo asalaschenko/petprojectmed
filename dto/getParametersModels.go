@@ -6,12 +6,13 @@ type ParamsListID struct {
 
 type QueryDoctorsListFilter struct {
 	List            string   `query:"list"`
+	DatesOfBirth    []string `query:"datesOfBirth"`
 	Specializations []string `query:"specializations"`
 }
 
 type QueryPatientsListFilter struct {
 	List         string   `query:"list"`
-	DatesOfBirth []string `query: datesOfBirth`
+	DatesOfBirth []string `query:"datesOfBirth"`
 	PhoneNumbers []string `query:"phoneNumber"`
 }
 

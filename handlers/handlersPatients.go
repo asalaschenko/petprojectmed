@@ -5,7 +5,6 @@ import (
 	"log"
 	"petprojectmed/dto"
 	"petprojectmed/utils"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -65,6 +64,7 @@ func OldGetPatientsListFilter(c *fiber.Ctx) error {
 }
 
 func GetPatientsListFilter(c *fiber.Ctx) error {
+	log.Println("OK")
 	queryFilters := new(dto.QueryPatientsListFilter)
 	err := c.QueryParser(queryFilters)
 	utils.CheckErr(err)
@@ -122,7 +122,7 @@ func GetPatientsListFilter(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).SendString("Список фильтров пуст !")
 		}
 
-		outputArray := findIntersectionOfSetsValues(resultArray)
+		outputArray := utils.FindIntersectionOfSetsValues(resultArray)
 
 		if len(outputArray) == 0 {
 			return c.Status(fiber.StatusOK).SendString("Нет данных с такими параметрами !")
@@ -161,7 +161,7 @@ func CreatePatient(c *fiber.Ctx) error {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 
-	InsertPatientByID(conn, newEntryDB)
+	InsertPatient(conn, newEntryDB)
 	return c.Status(fiber.StatusCreated).SendString("Запись прошла успешно !")
 }
 
@@ -197,7 +197,6 @@ func UpdatePatient(c *fiber.Ctx) error {
 		updateEntryPatient := updateEntryPatients[0]
 
 		caser := cases.Title(language.Russian)
-
 		if inputJson.Name != "" {
 			updateEntryPatient.Name = caser.String(inputJson.Name)
 		}
@@ -269,7 +268,7 @@ func returnIndexOfTargetPhoneNumber(phoneNunmbers []string) []int {
 
 func returnIndexOfTargetDateOfBirth(dateOfBirth time.Time, layout string) []int {
 	outputArray := []int{}
-	funcArray := [3]func(time.Time, time.Time) bool{compareYear, compareMonth, compareDay}
+	funcArray := [3]func(time.Time, time.Time) bool{utils.CompareYear, utils.CompareMonth, utils.CompareDay}
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 	patients := GetAllPatients(conn)
@@ -286,34 +285,5 @@ func returnIndexOfTargetDateOfBirth(dateOfBirth time.Time, layout string) []int 
 	}
 
 	log.Println(outputArray)
-	return outputArray
-}
-
-func compareYear(date1 time.Time, date2 time.Time) bool {
-	return date1.Year() == date2.Year()
-}
-
-func compareMonth(date1 time.Time, date2 time.Time) bool {
-	return date1.Month() == date2.Month()
-}
-
-func compareDay(date1 time.Time, date2 time.Time) bool {
-	return date1.Day() == date2.Day()
-}
-
-func findIntersectionOfSetsValues(arrays [][]int) []int {
-	outputArray := []int{}
-	var count int = 0
-	for _, val1 := range arrays[0] {
-		for _, val2 := range arrays {
-			if slices.Contains(val2, val1) {
-				count++
-			}
-		}
-		if count == len(arrays) {
-			outputArray = append(outputArray, val1)
-		}
-		count = 0
-	}
 	return outputArray
 }
