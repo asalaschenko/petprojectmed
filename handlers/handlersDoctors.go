@@ -84,6 +84,7 @@ func GetDoctorsListFilter(c *fiber.Ctx) error {
 
 			caser := cases.Lower(language.Russian)
 			for index, value := range queryFilters.Specializations {
+				value = utils.TrimSpaces(value)
 				queryFilters.Specializations[index] = caser.String(value)
 			}
 
