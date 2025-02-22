@@ -1,21 +1,6 @@
 package utils
 
-import (
-	"slices"
-	"time"
-)
-
-func CompareYear(date1 time.Time, date2 time.Time) bool {
-	return date1.Year() == date2.Year()
-}
-
-func CompareMonth(date1 time.Time, date2 time.Time) bool {
-	return date1.Month() == date2.Month()
-}
-
-func CompareDay(date1 time.Time, date2 time.Time) bool {
-	return date1.Day() == date2.Day()
-}
+import "slices"
 
 func FindIntersectionOfSetsValues(arrays [][]int) []int {
 	outputArray := []int{}

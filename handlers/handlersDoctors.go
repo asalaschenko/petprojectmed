@@ -101,15 +101,15 @@ func GetDoctorsListFilter(c *fiber.Ctx) error {
 				utils.TransformCharsForDateofBirth(&value)
 
 				if date, err := time.Parse("2006-01-02", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01-02")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01-02", 'd')...)
 				} else if date, err := time.Parse("2006-01", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01", 'd')...)
 				} else if date, err := time.Parse("2006", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006", 'd')...)
 				} else if date, err := time.Parse("01-2006", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "01-2006")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "01-2006", 'd')...)
 				} else if date, err := time.Parse("02-01-2006", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "02-01-2006")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "02-01-2006", 'd')...)
 				}
 			}
 

@@ -108,17 +108,6 @@ func validateInputJsonDoctorsForUpdate(newEntry *dto.Doctor) (bool, string) {
 	return flag, outputString
 }
 
-func validateInputDoctorID(doctorID int) bool {
-	conn := GetConnectionDB()
-	defer conn.Close(context.Background())
-	entries := GetAllDoctors(conn)
-	if doctorID > 0 && doctorID <= len(*entries) {
-		return true
-	} else {
-		return false
-	}
-}
-
 func validateInputJsonPatientsForCreate(newEntry *dto.Patient) (bool, string) {
 	flag := true
 	outputString := ""
@@ -237,17 +226,6 @@ func isTherePhoneNumberInOtherPatients(phoneNumber string) bool {
 	return false
 }
 
-func validateInputPatientID(patientID int) bool {
-	conn := GetConnectionDB()
-	defer conn.Close(context.Background())
-	entries := GetAllPatients(conn)
-	if patientID > 0 && patientID <= len(*entries) {
-		return true
-	} else {
-		return false
-	}
-}
-
 func validateInputJsonAppointment(val *dto.Appointment) (bool, string) {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
@@ -323,7 +301,7 @@ func validateInputJsonAppointment(val *dto.Appointment) (bool, string) {
 		valid, timeValue := utils.CheckTimeValue(val.Time)
 		if !valid {
 			flag = false
-			outputString += "Неверный формат времени ! Формат должен быть чч:мм !" + "\n"
+			outputString += "Неверный формат времени !" + "\n"
 		} else if timeValue.Hour() < 9 || timeValue.Hour() == 12 || timeValue.Hour() > 18 {
 			flag = false
 			outputString += "Врач принимает с 9-00 до 19-00, перерыв в 12-00 !" + "\n"
@@ -337,12 +315,13 @@ func isFreeHourOfAppointment(val *dto.Appointment) bool {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 
+	intDoctorID, _ := strconv.Atoi(val.DoctorID)
 	appointments := GetAllAppointments(conn)
 
 	for _, value := range *appointments {
-		intDoctorID, _ := strconv.Atoi(val.DoctorID)
 		if value.DoctorID == intDoctorID {
-			dateValue, _ := time.Parse(time.DateTime, val.Date+" "+val.Time+":00")
+			_, timeValue := utils.CheckTimeValue(val.Time)
+			dateValue, _ := time.Parse(time.DateTime, val.Date+" "+timeValue.Format(time.TimeOnly))
 			d := time.Hour
 			dateValue = dateValue.Truncate(d)
 			if value.DateAppointment.Equal(dateValue) {
@@ -357,9 +336,40 @@ func validateInputAppointmentID(appointmentID int) bool {
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
 	entries := GetAllAppointments(conn)
-	if appointmentID > 0 && appointmentID <= len(*entries) {
-		return true
-	} else {
-		return false
+
+	for _, value := range *entries {
+		if value.ID == appointmentID {
+			return true
+		}
 	}
+
+	return false
+}
+
+func validateInputDoctorID(doctorID int) bool {
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+	entries := GetAllDoctors(conn)
+
+	for _, value := range *entries {
+		if value.ID == doctorID {
+			return true
+		}
+	}
+
+	return false
+}
+
+func validateInputPatientID(patientID int) bool {
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+	entries := GetAllPatients(conn)
+
+	for _, value := range *entries {
+		if value.ID == patientID {
+			return true
+		}
+	}
+
+	return false
 }

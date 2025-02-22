@@ -11,7 +11,8 @@ import (
 )
 
 func GetAllPatients(conn *pgx.Conn) *[]dto.PatientTable {
-	query := `SELECT * FROM patients`
+	query := `SELECT * FROM patients
+	order by id`
 
 	rows, err := conn.Query(context.Background(), query)
 	utils.CheckErr(err)

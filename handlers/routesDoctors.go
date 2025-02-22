@@ -12,6 +12,7 @@ func RegisterRoutesDoctors(app *fiber.App, port string) {
 		schedule := doctors.Group("/schedule")
 		schedule.Get("/", GetAppointments)
 		schedule.Post("/", CreateAppointment)
+		schedule.Delete("/:id", DeleteAppointment)
 		doctors.Get("/", GetDoctorsListFilter)
 		doctors.Get("/:id", GetDoctorsListID)
 		doctors.Post("/", CreateDoctor)

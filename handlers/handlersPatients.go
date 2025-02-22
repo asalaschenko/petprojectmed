@@ -7,7 +7,6 @@ import (
 	"petprojectmed/utils"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -101,15 +100,15 @@ func GetPatientsListFilter(c *fiber.Ctx) error {
 				utils.TransformCharsForDateofBirth(&value)
 
 				if date, err := time.Parse("2006-01-02", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01-02")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01-02", 'p')...)
 				} else if date, err := time.Parse("2006-01", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006-01", 'p')...)
 				} else if date, err := time.Parse("2006", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "2006", 'p')...)
 				} else if date, err := time.Parse("01-2006", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "01-2006")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "01-2006", 'p')...)
 				} else if date, err := time.Parse("02-01-2006", value); err == nil {
-					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "02-01-2006")...)
+					arrayIndex = append(arrayIndex, returnIndexOfTargetDateOfBirth(date, "02-01-2006", 'p')...)
 				}
 			}
 
@@ -263,27 +262,5 @@ func returnIndexOfTargetPhoneNumber(phoneNunmbers []string) []int {
 		outputArray = append(outputArray, entry.ID)
 	}
 
-	return outputArray
-}
-
-func returnIndexOfTargetDateOfBirth(dateOfBirth time.Time, layout string) []int {
-	outputArray := []int{}
-	funcArray := [3]func(time.Time, time.Time) bool{utils.CompareYear, utils.CompareMonth, utils.CompareDay}
-	conn := GetConnectionDB()
-	defer conn.Close(context.Background())
-	patients := GetAllPatients(conn)
-	form := strings.Split(layout, "-")
-
-	for _, value := range *patients {
-		flag := true
-		for index := range len(form) {
-			flag = flag && funcArray[index](dateOfBirth, value.DateOfBirth)
-		}
-		if flag {
-			outputArray = append(outputArray, value.ID)
-		}
-	}
-
-	log.Println(outputArray)
 	return outputArray
 }

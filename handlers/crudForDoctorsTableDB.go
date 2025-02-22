@@ -11,7 +11,8 @@ import (
 )
 
 func GetAllDoctors(conn *pgx.Conn) *[]dto.DoctorTable {
-	query := `SELECT * FROM doctors`
+	query := `SELECT * FROM doctors
+	order by id`
 
 	rows, err := conn.Query(context.Background(), query)
 	utils.CheckErr(err)
@@ -57,6 +58,7 @@ func GetDoctorsBySpecialization(conn *pgx.Conn, doctorSpecialization []string) *
 		str += ","
 	}
 	str += ")"
+	str += "\n" + "order by id"
 	query += str
 
 	log.Println(query)
