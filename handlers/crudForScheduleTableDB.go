@@ -11,7 +11,8 @@ import (
 )
 
 func GetAllAppointments(conn *pgx.Conn) *[]dto.AppointmentTable {
-	query := `SELECT * FROM schedule`
+	query := `SELECT * FROM schedule
+	order by id`
 
 	rows, err := conn.Query(context.Background(), query)
 	utils.CheckErr(err)
