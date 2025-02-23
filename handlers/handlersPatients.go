@@ -152,7 +152,7 @@ func CreatePatient(c *fiber.Ctx) error {
 	newEntryDB := new(dto.PatientTable)
 	newEntryDB.Name = caser.String(inputJson.Name)
 	newEntryDB.Family = caser.String(inputJson.Family)
-	newEntryDB.DateOfBirth, _ = time.Parse(time.DateOnly, inputJson.DateOfBirth)
+	_, newEntryDB.DateOfBirth = utils.CheckParseDateValue(inputJson.DateOfBirth)
 	caser = cases.Lower(language.Russian)
 	newEntryDB.Gender = caser.String(inputJson.Gender)
 	newEntryDB.PhoneNumber = inputJson.PhoneNumber
@@ -205,8 +205,7 @@ func UpdatePatient(c *fiber.Ctx) error {
 		}
 
 		if inputJson.DateOfBirth != "" {
-			value, _ := time.Parse(time.DateOnly, inputJson.DateOfBirth)
-			updateEntryPatient.DateOfBirth = value
+			_, updateEntryPatient.DateOfBirth = utils.CheckParseDateValue(inputJson.DateOfBirth)
 		}
 
 		caser = cases.Lower(language.Russian)
@@ -236,9 +235,14 @@ func DeletePatient(c *fiber.Ctx) error {
 
 	isValidId := validateInputPatientID(intIdValue)
 
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
 	if isValidId {
-		conn := GetConnectionDB()
-		defer conn.Close(context.Background())
+		isUsingIDasFK := utils.CheckExternalUsedOfPK(conn, "patients", "id", intIdValue)
+		if isUsingIDasFK {
+			return c.Status(fiber.StatusBadRequest).SendString("Нельзя удалить запись ! Присутствуют таблицы, где поля ссылаются на значение в записи !")
+		}
 
 		values := []int{}
 		values = append(values, intIdValue)

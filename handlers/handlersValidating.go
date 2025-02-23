@@ -45,8 +45,8 @@ func validateInputJsonDoctorsForCreate(newEntry *dto.Doctor) (bool, string) {
 	}
 
 	/*newEntry.DateOfBirth*/
-	_, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
-	if err != nil {
+	valid, _ := utils.CheckParseDateValue(newEntry.DateOfBirth)
+	if !valid {
 		flag = false
 		outputString += "Неверный формат либо пропущена дата рождения !" + "\n"
 	}
@@ -90,8 +90,8 @@ func validateInputJsonDoctorsForUpdate(newEntry *dto.Doctor) (bool, string) {
 
 	// /*newEntry.DateOfBirth*/
 	if newEntry.DateOfBirth != "" {
-		_, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
-		if err == nil {
+		valid, _ := utils.CheckParseDateValue(newEntry.DateOfBirth)
+		if !valid {
 			flag = false
 			outputString += "Неверный формат либо пропущена дата рождения !" + "\n"
 		}
@@ -144,8 +144,8 @@ func validateInputJsonPatientsForCreate(newEntry *dto.Patient) (bool, string) {
 	}
 
 	/*newEntry.DateOfBirth*/
-	_, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
-	if err != nil {
+	valid, _ := utils.CheckParseDateValue(newEntry.DateOfBirth)
+	if !valid {
 		flag = false
 		outputString += "Неверный формат либо пропущена дата рождения !" + "\n"
 	}
@@ -194,10 +194,8 @@ func validateInputJsonPatientsForUpdate(newEntry *dto.Patient) (bool, string) {
 
 	/*newEntry.DateOfBirth*/
 	if newEntry.DateOfBirth != "" {
-		val, err := time.Parse(time.DateOnly, newEntry.DateOfBirth)
-		if err == nil {
-			newEntry.DateOfBirth = val.String()
-		} else {
+		valid, _ := utils.CheckParseDateValue(newEntry.DateOfBirth)
+		if !valid {
 			flag = false
 			outputString += "Неверный формат либо пропущена дата рождения !" + "\n"
 		}
@@ -270,8 +268,8 @@ func validateInputJsonAppointment(val *dto.Appointment) (bool, string) {
 		flag = false
 		outputString += "Пропущена дата приёма !" + "\n"
 	} else {
-		date, err := time.Parse(time.DateOnly, val.Date)
-		if err != nil {
+		valid, date := utils.CheckParseDateValue(val.Date)
+		if !valid {
 			flag = false
 			outputString += "Неверный формат даты ! Формат должен быть гггг-мм-дд !" + "\n"
 		} else if int(date.Weekday()) == 6 || int(date.Weekday()) == 0 {
@@ -298,7 +296,7 @@ func validateInputJsonAppointment(val *dto.Appointment) (bool, string) {
 		flag = false
 		outputString += "Пропущено время приёма !" + "\n"
 	} else {
-		valid, timeValue := utils.CheckTimeValue(val.Time)
+		valid, timeValue := utils.CheckParseTimeValue(val.Time)
 		if !valid {
 			flag = false
 			outputString += "Неверный формат времени !" + "\n"
@@ -320,7 +318,7 @@ func isFreeHourOfAppointment(val *dto.Appointment) bool {
 
 	for _, value := range *appointments {
 		if value.DoctorID == intDoctorID {
-			_, timeValue := utils.CheckTimeValue(val.Time)
+			_, timeValue := utils.CheckParseTimeValue(val.Time)
 			dateValue, _ := time.Parse(time.DateTime, val.Date+" "+timeValue.Format(time.TimeOnly))
 			d := time.Hour
 			dateValue = dateValue.Truncate(d)

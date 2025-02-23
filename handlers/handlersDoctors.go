@@ -156,7 +156,7 @@ func CreateDoctor(c *fiber.Ctx) error {
 	caser = cases.Lower(language.Russian)
 	newEntryDB.Specialization = caser.String(utils.TrimSpaces(inputJson.Specialization))
 	newEntryDB.Cabinet = inputJson.Cabinet
-	newEntryDB.DateOfBirth, _ = time.Parse(time.DateOnly, inputJson.DateOfBirth)
+	_, newEntryDB.DateOfBirth = utils.CheckParseDateValue(inputJson.DateOfBirth)
 
 	conn := GetConnectionDB()
 	defer conn.Close(context.Background())
@@ -212,8 +212,7 @@ func UpdateDoctor(c *fiber.Ctx) error {
 		}
 
 		if inputJson.DateOfBirth != "" {
-			value, _ := time.Parse(time.DateOnly, inputJson.DateOfBirth)
-			updateEntryDoctor.DateOfBirth = value
+			_, updateEntryDoctor.DateOfBirth = utils.CheckParseDateValue(inputJson.DateOfBirth)
 		}
 
 		if inputJson.Cabinet != 0 {
@@ -237,9 +236,14 @@ func DeleteDoctor(c *fiber.Ctx) error {
 
 	isValidId := validateInputDoctorID(intIdValue)
 
+	conn := GetConnectionDB()
+	defer conn.Close(context.Background())
+
 	if isValidId {
-		conn := GetConnectionDB()
-		defer conn.Close(context.Background())
+		isUsingIDasFK := utils.CheckExternalUsedOfPK(conn, "doctors", "id", intIdValue)
+		if isUsingIDasFK {
+			return c.Status(fiber.StatusBadRequest).SendString("Нельзя удалить запись ! Присутствуют таблицы, где поля ссылаются на значение в записи !")
+		}
 
 		values := []int{}
 		values = append(values, intIdValue)
