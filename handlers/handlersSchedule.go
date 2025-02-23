@@ -106,7 +106,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 
 	newEntryOutput := new(dto.InsertAppointmentTable)
 	_, timeValue := utils.CheckParseTimeValue(newEntryInput.Time)
-	_, dateValue := utils.CheckParseTimeValue(newEntryInput.Date)
+	_, dateValue := utils.CheckParseDateValue(newEntryInput.Date)
 	dateTimeValue, _ := time.Parse(time.DateTime, dateValue.Format(time.DateOnly)+" "+timeValue.Format(time.TimeOnly))
 	trunc := time.Hour
 	dateTimeValue = dateTimeValue.Truncate(trunc)
