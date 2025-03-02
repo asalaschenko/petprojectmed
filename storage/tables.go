@@ -1,10 +1,8 @@
-package dto
+package storage
 
-import (
-	"time"
-)
+import "time"
 
-type DoctorTable struct {
+type Doctor struct {
 	ID             int
 	Name           string
 	Family         string
@@ -13,7 +11,7 @@ type DoctorTable struct {
 	DateOfBirth    time.Time
 }
 
-type PatientTable struct {
+type Patient struct {
 	ID          int
 	Name        string
 	Family      string
@@ -22,7 +20,7 @@ type PatientTable struct {
 	PhoneNumber string
 }
 
-type AppointmentTable struct {
+type GetAppointment struct {
 	ID              int
 	DoctorID        int
 	DoctorInitials  string
@@ -32,8 +30,18 @@ type AppointmentTable struct {
 	DateAppointment time.Time
 }
 
-type InsertAppointmentTable struct {
+type InsertAppointment struct {
 	DoctorID        int
 	PatientID       int
 	DateAppointment time.Time
+}
+
+func NewDoctor(Name string, Family string, Specialization string, Cabinet int, DateOfBirth time.Time) *Doctor {
+	doctor := new(Doctor)
+	doctor.Name = Name
+	doctor.Family = Family
+	doctor.Specialization = Specialization
+	doctor.Cabinet = Cabinet
+	doctor.DateOfBirth = DateOfBirth
+	return doctor
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"errors"
 	"os"
-	"petprojectmed/handlers"
-	"petprojectmed/utils"
+	"petprojectmed/common"
+	"petprojectmed/routes"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -12,7 +12,7 @@ import (
 func main() {
 	port, exists := os.LookupEnv("PORT_GOLANG")
 	if !exists {
-		utils.CheckErr(errors.New("not found port for current application"))
+		common.CheckErr(errors.New("not found port for current application"))
 	}
 
 	app := fiber.New(fiber.Config{
@@ -29,6 +29,5 @@ func main() {
 }
 
 func registerRoutes(app *fiber.App, port string) {
-	handlers.RegisterRoutesDoctors(app, port)
-	handlers.RegisterRoutesPatients(app, port)
+	routes.RegisterRoutesDoctors(app, port)
 }

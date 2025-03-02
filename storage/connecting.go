@@ -1,9 +1,9 @@
-package handlers
+package storage
 
 import (
 	"context"
 	"fmt"
-	"petprojectmed/utils"
+	"petprojectmed/common"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -16,7 +16,7 @@ func GetConnectionDB() *pgx.Conn {
 	dbName := "clinicdb"
 
 	conn, err := NewPostgres(username, pass, host, port, dbName)
-	utils.CheckErr(err)
+	common.CheckErr(err)
 	return conn
 }
 
