@@ -24,10 +24,11 @@ func main() {
 	})
 
 	registerRoutes(app, port)
-
 	app.Listen(":" + port)
 }
 
 func registerRoutes(app *fiber.App, port string) {
 	routes.RegisterRoutesDoctors(app, port)
+	routes.RegisterRoutesPatients(app, port)
+	routes.RegisterRoutesSchedule(app, port)
 }

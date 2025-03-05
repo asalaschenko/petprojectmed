@@ -55,13 +55,13 @@ func GetIDofDoctors(conn *pgx.Conn) *[]int {
 	common.CheckErr(err)
 	defer rows.Close()
 
-	IDs, err := LoadIDs(rows)
+	IDs, err := LoadInts(rows)
 	common.CheckErr(err)
 
 	return IDs
 }
 
-func GetIDandSpecializations(conn *pgx.Conn) *map[int]string {
+func GetDoctorsIDandSpecializations(conn *pgx.Conn) *map[int]string {
 	query := `
         SELECT id, specialization FROM doctors
     `
@@ -76,7 +76,7 @@ func GetIDandSpecializations(conn *pgx.Conn) *map[int]string {
 	return m
 }
 
-func GetIDandDateofBirth(conn *pgx.Conn) *map[int]time.Time {
+func GetDoctorsIDandDateofBirth(conn *pgx.Conn) *map[int]time.Time {
 	query := `
         SELECT id, dateofbirth FROM doctors
     `
@@ -91,31 +91,75 @@ func GetIDandDateofBirth(conn *pgx.Conn) *map[int]time.Time {
 	return m
 }
 
-func DeleteDoctorByID(conn *pgx.Conn, doctorID int) {
+func UpdateDoctorNameByID(conn *pgx.Conn, doctorID int, val string) {
 	query := `
-        DELETE FROM doctors WHERE id = @id
-    `
+	UPDATE doctors
+	SET name = @name
+	WHERE id = @id
+`
 	args := pgx.NamedArgs{
-		"id": doctorID,
+		"id":   doctorID,
+		"name": val,
 	}
 
 	_, err := conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func UpdateDoctorByID(conn *pgx.Conn, doctorID int, doctor *Doctor) {
+func UpdateDoctorFamilyByID(conn *pgx.Conn, doctorID int, val string) {
 	query := `
-        UPDATE doctors
-        SET name = @name, family = @family, specialization = @specialization, cabinet = @cabinet, dateofbirth = @dateofbirth
-        WHERE id = @id
-    `
+	UPDATE doctors
+	SET family = @family
+	WHERE id = @id
+`
 	args := pgx.NamedArgs{
-		"id":             doctor.ID,
-		"name":           doctor.Name,
-		"family":         doctor.Family,
-		"specialization": doctor.Specialization,
-		"cabinet":        doctor.Cabinet,
-		"dateofbirth":    doctor.DateOfBirth,
+		"id":     doctorID,
+		"family": val,
+	}
+
+	_, err := conn.Exec(context.Background(), query, args)
+	common.CheckErr(err)
+}
+
+func UpdateDoctorSpecializationByID(conn *pgx.Conn, doctorID int, val string) {
+	query := `
+	UPDATE doctors
+	SET specialization = @specialization
+	WHERE id = @id
+`
+	args := pgx.NamedArgs{
+		"id":             doctorID,
+		"specialization": val,
+	}
+
+	_, err := conn.Exec(context.Background(), query, args)
+	common.CheckErr(err)
+}
+
+func UpdateDoctorCabinetByID(conn *pgx.Conn, doctorID int, val int) {
+	query := `
+	UPDATE doctors
+	SET cabinet = @cabinet
+	WHERE id = @id
+`
+	args := pgx.NamedArgs{
+		"id":      doctorID,
+		"cabinet": val,
+	}
+
+	_, err := conn.Exec(context.Background(), query, args)
+	common.CheckErr(err)
+}
+
+func UpdateDoctorDateOfBirthByID(conn *pgx.Conn, doctorID int, val time.Time) {
+	query := `
+	UPDATE doctors
+	SET dateofbirth = @dateofbirth
+	WHERE id = @id
+`
+	args := pgx.NamedArgs{
+		"id":          doctorID,
+		"dateofbirth": val,
 	}
 
 	_, err := conn.Exec(context.Background(), query, args)
@@ -132,6 +176,18 @@ func InsertDoctor(conn *pgx.Conn, doctor *Doctor) {
 		"specialization": doctor.Specialization,
 		"cabinet":        doctor.Cabinet,
 		"dateofbirth":    doctor.DateOfBirth,
+	}
+
+	_, err := conn.Exec(context.Background(), query, args)
+	common.CheckErr(err)
+}
+
+func DeleteDoctorByID(conn *pgx.Conn, doctorID int) {
+	query := `
+        DELETE FROM doctors WHERE id = @id
+    `
+	args := pgx.NamedArgs{
+		"id": doctorID,
 	}
 
 	_, err := conn.Exec(context.Background(), query, args)

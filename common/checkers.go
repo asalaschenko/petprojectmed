@@ -23,7 +23,7 @@ func GenLocationError(extFunction string, fileName string, lineOfCallCheckErr st
 	return outputErr
 }
 
-func CheckTimeValue(timeValue string) (bool, string) {
+func CheckAndParseTimeValue(timeValue string) (bool, string) {
 	_, err := time.Parse("15", timeValue)
 	if err == nil {
 		return true, "15"
@@ -39,7 +39,7 @@ func CheckTimeValue(timeValue string) (bool, string) {
 	return false, ""
 }
 
-func CheckDateValue(dateValue string) (bool, string) {
+func CheckAndParseDateValue(dateValue string) (bool, string) {
 	_, err := time.Parse("2006-01-02", dateValue)
 	if err == nil {
 		return true, "2006-01-02"
@@ -51,7 +51,7 @@ func CheckDateValue(dateValue string) (bool, string) {
 	return false, ""
 }
 
-func CheckDateValueForFilter(dateValue string) (bool, string) {
+func CheckAndParseDateValueForFilter(dateValue string) (bool, string) {
 	_, err := time.Parse("2006-01-02", dateValue)
 	if err == nil {
 		return true, "2006-01-02"
@@ -75,6 +75,16 @@ func CheckDateValueForFilter(dateValue string) (bool, string) {
 	_, err = time.Parse("02-01-2006", dateValue)
 	if err == nil {
 		return true, "02-01-2006"
+	}
+
+	_, err = time.Parse("2006-01-02 15", dateValue)
+	if err == nil {
+		return true, "2006-01-02 15"
+	}
+
+	_, err = time.Parse("2006-01-02 15:04", dateValue)
+	if err == nil {
+		return true, "2006-01-02 15:04"
 	}
 
 	return false, ""

@@ -8,16 +8,8 @@ import (
 	"slices"
 	"sort"
 
-	//"github.com/gofiber/fiber/v2/log"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-)
-
-const (
-	OK              = "OK"
-	NOT_FOUND       = "NOT_FOUND"
-	LIST_EMPTY      = "LIST_EMPTY"
-	INVALID_REQUEST = "INVALID_REQUEST"
 )
 
 func (val *doctorsID) GetList() (*[]storage.Doctor, string) {
@@ -37,9 +29,9 @@ func (val *doctorsID) GetList() (*[]storage.Doctor, string) {
 	}
 
 	if len(arrayIndex) == 0 {
-		return nil, NOT_FOUND
+		return nil, common.NOT_FOUND
 	} else {
-		return storage.GetDoctorsByID(conn, []int(*val)), OK
+		return storage.GetDoctorsByID(conn, []int(*val)), common.OK
 	}
 }
 
@@ -49,7 +41,7 @@ func (val *QueryDoctorsListFilter) GetList() (*[]storage.Doctor, string) {
 
 	switch val.List {
 	case "all":
-		return storage.GetAllDoctors(conn), OK
+		return storage.GetAllDoctors(conn), common.OK
 	case "filter":
 		resultArray := [][]int{}
 		flag := false
@@ -63,11 +55,11 @@ func (val *QueryDoctorsListFilter) GetList() (*[]storage.Doctor, string) {
 				val.Specializations[index] = caser.String(value)
 			}
 
-			m := storage.GetIDandSpecializations(conn)
+			m := storage.GetDoctorsIDandSpecializations(conn)
 
 			arrayIndex := []int{}
 			for _, value := range val.Specializations {
-				arrayIndex = append(arrayIndex, common.ReturnIndexOfTargetFilterValue(value, m)...)
+				arrayIndex = append(arrayIndex, common.ReturnIndexOfTargetFilterValueString(value, m)...)
 			}
 			sort.Ints(arrayIndex)
 			arrayIndex = common.RemoveDuplicateInt(arrayIndex)
@@ -81,13 +73,11 @@ func (val *QueryDoctorsListFilter) GetList() (*[]storage.Doctor, string) {
 				common.TransformCharsForDateofBirth(&val.DatesOfBirth[index])
 			}
 
-			log.Println(val.DatesOfBirth)
-
-			m := storage.GetIDandDateofBirth(conn)
+			m := storage.GetDoctorsIDandDateofBirth(conn)
 
 			arrayIndex := []int{}
 			for _, value := range val.DatesOfBirth {
-				if b, layout := common.CheckDateValueForFilter(value); b == true {
+				if b, layout := common.CheckAndParseDateValueForFilter(value); b {
 					date := common.ReturnDateFormat(value, layout)
 					arrayIndex = append(arrayIndex, common.ReturnIndexOfTargetDateOfBirth(date, m, layout)...)
 				}
@@ -101,25 +91,25 @@ func (val *QueryDoctorsListFilter) GetList() (*[]storage.Doctor, string) {
 		}
 
 		if !flag {
-			return nil, LIST_EMPTY
+			return nil, common.FILTER_EMPTY
 		}
 
 		outputArray := common.FindIntersectionOfSetsValues(resultArray)
 
 		if len(outputArray) == 0 {
-			return nil, NOT_FOUND
+			return nil, common.NOT_FOUND
 		}
 
-		return storage.GetDoctorsByID(conn, outputArray), OK
+		return storage.GetDoctorsByID(conn, outputArray), common.OK
 	default:
-		return nil, INVALID_REQUEST
+		return nil, common.INVALID_REQUEST
 	}
 }
 
 func (val *Doctor) Create() string {
 	caserT := cases.Title(language.Russian)
 	caserL := cases.Lower(language.Russian)
-	_, layout := common.CheckDateValue(val.DateOfBirth)
+	_, layout := common.CheckAndParseDateValue(val.DateOfBirth)
 	date := common.ReturnDateFormat(val.DateOfBirth, layout)
 	doctor := storage.NewDoctor(caserT.String(val.Name), caserT.String(val.Family), caserL.String(common.TrimSpaces(val.Specialization)), val.Cabinet, date)
 
@@ -127,43 +117,42 @@ func (val *Doctor) Create() string {
 	defer conn.Close(context.Background())
 
 	storage.InsertDoctor(conn, doctor)
-	return OK
+	return common.OK
 }
 
-func (val *Doctor) Update(ID int) string {
+func (val *DoctorU) Update(ID int) string {
 	conn := storage.GetConnectionDB()
 	defer conn.Close(context.Background())
 
-	intID := []int{ID}
-	doctor := storage.GetDoctorsByID(conn, intID)
-	updateDoctors := *doctor
-	updateEntryDoctor := updateDoctors[0]
-
-	caser := cases.Title(language.Russian)
+	caserT := cases.Title(language.Russian)
+	caserL := cases.Lower(language.Russian)
 
 	if val.Name != "" {
-		updateEntryDoctor.Name = caser.String(val.Name)
+		storage.UpdateDoctorNameByID(conn, ID, caserT.String(val.Name))
 	}
-
 	if val.Family != "" {
-		updateEntryDoctor.Family = caser.String(val.Family)
+		storage.UpdateDoctorNameByID(conn, ID, caserT.String(val.Family))
 	}
-
 	if val.Specialization != "" {
-		val.Specialization = common.TrimSpaces(val.Specialization)
-		updateEntryDoctor.Specialization = val.Specialization
+		storage.UpdateDoctorNameByID(conn, ID, caserL.String(common.TrimSpaces(val.Specialization)))
 	}
-
 	if val.DateOfBirth != "" {
-		_, layout := common.CheckDateValue(val.DateOfBirth)
+		_, layout := common.CheckAndParseDateValue(val.DateOfBirth)
 		date := common.ReturnDateFormat(val.DateOfBirth, layout)
-		updateEntryDoctor.DateOfBirth = date
+		storage.UpdateDoctorDateOfBirthByID(conn, ID, date)
 	}
-
 	if val.Cabinet != 0 {
-		updateEntryDoctor.Cabinet = val.Cabinet
+		storage.UpdateDoctorCabinetByID(conn, ID, val.Cabinet)
 	}
+	return common.OK
+}
 
-	storage.UpdateDoctorByID(conn, ID, &updateEntryDoctor)
-	return OK
+func (ID *doctorID) Delete() (string, *storage.Doctor) {
+	conn := storage.GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	output := *storage.GetDoctorsByID(conn, []int{int(*ID)})
+	storage.DeleteDoctorByID(conn, int(*ID))
+
+	return common.OK, &output[0]
 }

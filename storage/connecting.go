@@ -9,13 +9,7 @@ import (
 )
 
 func GetConnectionDB() *pgx.Conn {
-	username := "postgres"
-	pass := "49236"
-	host := "localhost"
-	port := "5432"
-	dbName := "clinicdb"
-
-	conn, err := NewPostgres(username, pass, host, port, dbName)
+	conn, err := NewPostgres(USERNAME, PASS, HOST, PORT, DB_NAME)
 	common.CheckErr(err)
 	return conn
 }

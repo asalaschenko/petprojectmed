@@ -19,6 +19,32 @@ func LoadDoctorEntries(rows pgx.Rows) (*[]Doctor, error) {
 	return &doctors, nil
 }
 
+func LoadPatientEntries(rows pgx.Rows) (*[]Patient, error) {
+	var patients []Patient
+	for rows.Next() {
+		var patient Patient
+		err := rows.Scan(&patient.Name, &patient.Family, &patient.DateOfBirth, &patient.Gender, &patient.PhoneNumber, &patient.ID)
+		if err != nil {
+			return nil, err
+		}
+		patients = append(patients, patient)
+	}
+	return &patients, nil
+}
+
+func LoadAppointmentEntries(rows pgx.Rows) (*[]GetAppointment, error) {
+	var appointments []GetAppointment
+	for rows.Next() {
+		var appointment GetAppointment
+		err := rows.Scan(&appointment.ID, &appointment.DoctorID, &appointment.DoctorInitials, &appointment.Specialization, &appointment.DateAppointment, &appointment.PatientID, &appointment.PatientInitials)
+		if err != nil {
+			return nil, err
+		}
+		appointments = append(appointments, appointment)
+	}
+	return &appointments, nil
+}
+
 func LoadIDandStringField(rows pgx.Rows) (*map[int]string, error) {
 	m := make(map[int]string)
 	for rows.Next() {
@@ -47,7 +73,35 @@ func LoadIDandDateField(rows pgx.Rows) (*map[int]time.Time, error) {
 	return &m, nil
 }
 
-func LoadIDs(rows pgx.Rows) (*[]int, error) {
+func LoadNonUniqueIDandDateField(rows pgx.Rows) (*map[int][]time.Time, error) {
+	m := map[int][]time.Time{}
+	for rows.Next() {
+		var k int
+		var v time.Time
+		err := rows.Scan(&k, &v)
+		if err != nil {
+			return nil, err
+		}
+		m[k] = append(m[k], v)
+	}
+	return &m, nil
+}
+
+func LoadIDandIntField(rows pgx.Rows) (*map[int]int, error) {
+	m := make(map[int]int)
+	for rows.Next() {
+		var k int
+		var v int
+		err := rows.Scan(&k, &v)
+		if err != nil {
+			return nil, err
+		}
+		m[k] = v
+	}
+	return &m, nil
+}
+
+func LoadInts(rows pgx.Rows) (*[]int, error) {
 	var arrayInt []int
 	for rows.Next() {
 		var i int
@@ -58,4 +112,17 @@ func LoadIDs(rows pgx.Rows) (*[]int, error) {
 		arrayInt = append(arrayInt, i)
 	}
 	return &arrayInt, nil
+}
+
+func LoadStrings(rows pgx.Rows) (*[]string, error) {
+	var arrayString []string
+	for rows.Next() {
+		var i string
+		err := rows.Scan(&i)
+		if err != nil {
+			return nil, err
+		}
+		arrayString = append(arrayString, i)
+	}
+	return &arrayString, nil
 }
