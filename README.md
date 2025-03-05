@@ -4,6 +4,7 @@
 
 endpoints:
 localhost:3000/
+
     GET     /doctor/list=all
     GET     /doctor/list=filter&specializations={:values}&datesOfBirth={:values}
     GET     /doctor/:id
