@@ -6,6 +6,19 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+func checkErr(err error) (string, error) {
+	customMessage := ""
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			customMessage += err.StructField() + " " + err.Error() + "\n" // Extract the custom message (simplified)
+			customMessage += "Descpription: " + returnErrorDescribe(err.Tag(), err.StructField()) + "\n"
+		}
+		return customMessage, err
+	} else {
+		return common.OK, nil
+	}
+}
+
 func returnErrorDescribe(tag string, field string) string {
 	switch tag {
 	case "NoF":
@@ -50,17 +63,4 @@ func returnValidator() *validator.Validate {
 	err = v.RegisterValidation("DoB", common.ValidDate)
 	common.CheckErr(err)
 	return v
-}
-
-func checkErr(err error) (string, error) {
-	customMessage := ""
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			customMessage += err.StructField() + " " + err.Error() + "\n" // Extract the custom message (simplified)
-			customMessage += "Descpription: " + returnErrorDescribe(err.Tag(), err.StructField()) + "\n"
-		}
-		return customMessage, err
-	} else {
-		return common.OK, nil
-	}
 }
