@@ -46,7 +46,7 @@ func ControllerCreateDoctor(c *fiber.Ctx) error {
 	if err := c.BodyParser(doctorJson); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 	}
-	if err, description := doctorJson.validate(); err != nil {
+	if description, err := doctorJson.validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(description)
 	}
 
@@ -71,7 +71,7 @@ func ControllerUpdateDeleteDoctor(c *fiber.Ctx, mode string) error {
 			if err := c.BodyParser(doctorJson); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 			}
-			if err, string := doctorJson.validate(); err != nil {
+			if string, err := doctorJson.validate(); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(string)
 			}
 			status := doctorJson.Update(intID)

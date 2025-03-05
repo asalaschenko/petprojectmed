@@ -45,13 +45,13 @@ func (ID *doctorID) verify() bool {
 	return slices.Contains(*values, int(*ID))
 }
 
-func (val *Doctor) validate() (error, string) {
+func (val *Doctor) validate() (string, error) {
 	common.TransformCharsForDateofBirth(&val.DateOfBirth)
 	err := returnValidator().Struct(val)
 	return checkErr(err)
 }
 
-func (val *DoctorU) validate() (error, string) {
+func (val *DoctorU) validate() (string, error) {
 	common.TransformCharsForDateofBirth(&val.DateOfBirth)
 	err := returnValidator().Struct(val)
 	return checkErr(err)

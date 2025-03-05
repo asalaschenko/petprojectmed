@@ -52,15 +52,15 @@ func returnValidator() *validator.Validate {
 	return v
 }
 
-func checkErr(err error) (error, string) {
+func checkErr(err error) (string, error) {
 	customMessage := ""
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			customMessage += err.StructField() + " " + err.Error() + "\n" // Extract the custom message (simplified)
 			customMessage += "Descpription: " + returnErrorDescribe(err.Tag(), err.StructField()) + "\n"
 		}
-		return err, customMessage
+		return customMessage, err
 	} else {
-		return nil, common.OK
+		return common.OK, nil
 	}
 }
