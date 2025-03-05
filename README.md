@@ -4,16 +4,17 @@
 
 endpoints:
 localhost:3000/
+
     GET     /doctor/list=all
     GET     /doctor/list=filter&specializations={:values}&datesOfBirth={:values}
-    GET     /doctor/:id
+    GET     /doctor/{:id}
     PUT     /doctor/:id
     DELETE  /doctor/:id
     POST    /doctor
 
     GET     /patient/list=all
     GET     /patient/list=filter&phoneNumbers={:values}&datesOfBirth={:values}
-    GET     /patient/:id
+    GET     /patient/{:id}
     PUT     /patient/:id
     DELETE  /patient/:id
     POST    /patient
