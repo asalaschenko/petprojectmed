@@ -47,9 +47,9 @@ func ControllerDeleteAppointment(c *fiber.Ctx) error {
 
 	AppointmentID := appointmentID(intID)
 	if AppointmentID.verify() {
-		status, Patient := AppointmentID.Delete()
+		status, appointment := AppointmentID.Delete()
 		if status == common.OK {
-			return c.JSON(Patient)
+			return c.JSON(appointment)
 		} else {
 			return c.Status(fiber.StatusForbidden).SendString(status)
 		}
