@@ -78,9 +78,9 @@ func ControllerUpdateDeletePatient(c *fiber.Ctx, mode string) error {
 			return c.Status(fiber.StatusAccepted).SendString(status)
 
 		case common.DELETE:
-			status, Patient := PatientID.Delete()
+			status, patient := PatientID.Delete()
 			if status == common.OK {
-				return c.JSON(Patient)
+				return c.JSON(patient)
 			} else {
 				return c.Status(fiber.StatusForbidden).SendString(status)
 			}
