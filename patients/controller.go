@@ -46,7 +46,7 @@ func ControllerCreatePatient(c *fiber.Ctx) error {
 	if err := c.BodyParser(PatientJson); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 	}
-	if err, description := PatientJson.validate(); err != nil {
+	if description, err := PatientJson.validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(description)
 	}
 
@@ -71,7 +71,7 @@ func ControllerUpdateDeletePatient(c *fiber.Ctx, mode string) error {
 			if err := c.BodyParser(PatientJson); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 			}
-			if err, string := PatientJson.validate(); err != nil {
+			if string, err := PatientJson.validate(); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(string)
 			}
 			status := PatientJson.Update(intID)
