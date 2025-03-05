@@ -29,7 +29,7 @@ func ControllerCreateAppointment(c *fiber.Ctx) error {
 	if err := c.BodyParser(appointmentJson); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 	}
-	if err, description := appointmentJson.validate(); err != nil {
+	if description, err := appointmentJson.validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(description)
 	}
 

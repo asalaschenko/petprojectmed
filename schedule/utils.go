@@ -2,10 +2,22 @@ package schedule
 
 import (
 	"petprojectmed/common"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 )
+
+func checkErr(err error) (string, error) {
+	customMessage := ""
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			customMessage += err.StructField() + " " + err.Error() + "\n" // Extract the custom message (simplified)
+			customMessage += "Descpription: " + returnErrorDescribe(err.Tag(), err.StructField()) + "\n"
+		}
+		return customMessage, err
+	} else {
+		return common.OK, nil
+	}
+}
 
 func returnErrorDescribe(tag string, field string) string {
 	switch tag {
@@ -27,27 +39,4 @@ func returnValidator() *validator.Validate {
 	err = v.RegisterValidation("T", common.ValidateTime)
 	common.CheckErr(err)
 	return v
-}
-
-func checkErr(err error) (error, string) {
-	customMessage := ""
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			customMessage += err.StructField() + " " + err.Error() + "\n" // Extract the custom message (simplified)
-			customMessage += "Descpription: " + returnErrorDescribe(err.Tag(), err.StructField()) + "\n"
-		}
-		return err, customMessage
-	} else {
-		return nil, common.OK
-	}
-}
-
-func isFreeHourOfAppointment(ID doctorID, date time.Time, list *[]map[int]time.Time) bool {
-	for _, value := range *list {
-		v, ok := value[int(ID)]
-		if ok && v == date {
-			return true
-		}
-	}
-	return false
 }

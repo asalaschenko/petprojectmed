@@ -86,6 +86,7 @@ func (val *QuerySheduleListFilter) GetList() (*[]storage.GetAppointment, string)
 
 const doctorAppointmentPeriod = 90
 const beginWork, endWork, breakWork = 9, 18, 12
+const SATURDAY, SUNDAY = 6, 0
 
 func (val *Appointment) Create() string {
 	conn := storage.GetConnectionDB()
@@ -102,7 +103,7 @@ func (val *Appointment) Create() string {
 	_, layout := common.CheckAndParseDateValue(val.Date)
 	date := common.ReturnDateFormat(val.Date, layout)
 	log.Println(date)
-	if int(date.Weekday()) == 6 || int(date.Weekday()) == 0 {
+	if int(date.Weekday()) == SATURDAY || int(date.Weekday()) == SUNDAY {
 		status = append(status, common.DAY_IS_OFF)
 	}
 	if !time.Now().Before(date) {

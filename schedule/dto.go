@@ -48,7 +48,7 @@ func (ID *appointmentID) verify() bool {
 	return slices.Contains(*values, int(*ID))
 }
 
-func (val *Appointment) validate() (error, string) {
+func (val *Appointment) validate() (string, error) {
 	err := returnValidator().Struct(val)
 	return checkErr(err)
 }
