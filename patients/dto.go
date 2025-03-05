@@ -1,0 +1,60 @@
+package patients
+
+import (
+	"context"
+	"petprojectmed/common"
+	"petprojectmed/storage"
+	"slices"
+)
+
+type Patient struct {
+	Name        string `json:"name" validate:"required,NoF,min=4,max=20"`
+	Family      string `json:"family" validate:"required,NoF,min=2,max=20"`
+	DateOfBirth string `json:"dateOfBirth" validate:"required,DoB"`
+	Gender      string `json:"gender" validate:"required,G"`
+	PhoneNumber string `json:"phoneNumber" validate:"required,PN"`
+}
+
+type PatientU struct {
+	Name        string `json:"name" validate:"omitempty,NoF,min=4,max=20"`
+	Family      string `json:"family" validate:"omitempty,NoF,min=2,max=20"`
+	DateOfBirth string `json:"dateOfBirth" validate:"omitempty,DoB"`
+	Gender      string `json:"gender" validate:"omitempty,G"`
+	PhoneNumber string `json:"phoneNumber" validate:"omitempty,PN"`
+}
+
+type QueryPatientsListFilter struct {
+	List         string   `query:"list"`
+	DatesOfBirth []string `query:"datesOfBirth"`
+	PhoneNumbers []string `query:"phoneNumbers"`
+}
+
+type ParamsID struct {
+	ID patientsID `params:"id"`
+}
+
+type patientID int
+
+type patientsID []int
+
+func (ID *patientID) verify() bool {
+	conn := storage.GetConnectionDB()
+	defer conn.Close(context.Background())
+
+	values := storage.GetIDofPatients(conn)
+	return slices.Contains(*values, int(*ID))
+}
+
+func (val *Patient) validate() (error, string) {
+	common.TransformCharsForDateofBirth(&val.DateOfBirth)
+	common.TransformCharsForPhoneNumber(&val.PhoneNumber)
+	err := returnValidator().Struct(val)
+	return checkErr(err)
+}
+
+func (val *PatientU) validate() (error, string) {
+	common.TransformCharsForDateofBirth(&val.DateOfBirth)
+	common.TransformCharsForPhoneNumber(&val.PhoneNumber)
+	err := returnValidator().Struct(val)
+	return checkErr(err)
+}

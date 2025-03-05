@@ -3,18 +3,16 @@ package main
 import (
 	"errors"
 	"os"
-	"petprojectmed/handlers"
-	"petprojectmed/utils"
+	"petprojectmed/common"
+	"petprojectmed/routes"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-var err_env error = errors.New("not found port for current application")
-
 func main() {
 	port, exists := os.LookupEnv("PORT_GOLANG")
 	if !exists {
-		utils.CheckErr(err_env)
+		common.CheckErr(errors.New("not found port for current application"))
 	}
 
 	app := fiber.New(fiber.Config{
@@ -25,12 +23,12 @@ func main() {
 		return c.JSON(c.App().Stack())
 	})
 
-	registerRoutes(app)
-
+	registerRoutes(app, port)
 	app.Listen(":" + port)
 }
 
-func registerRoutes(app *fiber.App) {
-	handlers.RegisterRoutesDoctors(app)
-	handlers.RegisterRoutesPatients(app)
+func registerRoutes(app *fiber.App, port string) {
+	routes.RegisterRoutesDoctors(app, port)
+	routes.RegisterRoutesPatients(app, port)
+	routes.RegisterRoutesSchedule(app, port)
 }
