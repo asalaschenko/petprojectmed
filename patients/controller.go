@@ -8,14 +8,27 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ControllerGetPatients(c *fiber.Ctx, mode string) error {
+type ControllerGetPatients struct {
+	filterService IFilterService
+	listService   IListService
+}
+
+func NewControllerGetPatients(filterService IFilterService, listService IListService) *ControllerGetPatients {
+	value := new(ControllerGetPatients)
+	value.filterService = filterService
+	value.listService = listService
+	return value
+}
+
+func (g *ControllerGetPatients) GetPatients(c *fiber.Ctx, mode string) error {
 	switch mode {
 	case common.LIST_ID:
 		paramsID := new(ParamsID)
 		err := c.ParamsParser(paramsID)
 
 		if err == nil {
-			outputData, status := paramsID.ID.GetList()
+			outputData := g.listService.GetList(&paramsID.ID)
+			status := g.listService.ReturnStatus()
 			if status == common.OK {
 				return c.JSON(outputData)
 			} else {
@@ -29,7 +42,8 @@ func ControllerGetPatients(c *fiber.Ctx, mode string) error {
 		err := c.QueryParser(queryFilters)
 		common.CheckErr(err)
 
-		outputData, status := queryFilters.GetList()
+		outputData := g.filterService.GetList(queryFilters)
+		status := g.filterService.ReturnStatus()
 		if status == common.OK {
 			return c.JSON(outputData)
 		} else {
@@ -40,21 +54,44 @@ func ControllerGetPatients(c *fiber.Ctx, mode string) error {
 	}
 }
 
-func ControllerCreatePatient(c *fiber.Ctx) error {
-	PatientJson := new(Patient)
+type ControllerCreatePatients struct {
+	createService ICreateService
+}
 
-	if err := c.BodyParser(PatientJson); err != nil {
+func NewControllerCreatePatients(createService ICreateService) *ControllerCreatePatients {
+	value := new(ControllerCreatePatients)
+	value.createService = createService
+	return value
+}
+
+func (cc *ControllerCreatePatients) CreatePatient(c *fiber.Ctx) error {
+	patientJson := new(Patient)
+
+	if err := c.BodyParser(patientJson); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 	}
-	if description, err := PatientJson.validate(); err != nil {
+	if description, err := patientJson.validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(description)
 	}
 
-	status := PatientJson.Create()
+	cc.createService.Create(patientJson)
+	status := cc.createService.ReturnStatus()
 	return c.Status(fiber.StatusCreated).SendString(status)
 }
 
-func ControllerUpdateDeletePatient(c *fiber.Ctx, mode string) error {
+type ControllerUpdateDeletePatients struct {
+	updateService IUpdateService
+	deleteService IDeleteService
+}
+
+func NewControllerUpdateDeletePatient(updateService IUpdateService, deleteService IDeleteService) *ControllerUpdateDeletePatients {
+	value := new(ControllerUpdateDeletePatients)
+	value.updateService = updateService
+	value.deleteService = deleteService
+	return value
+}
+
+func (u *ControllerUpdateDeletePatients) UpdateDeletePatient(c *fiber.Ctx, mode string) error {
 	ID := c.Params("id")
 
 	intID, err := strconv.Atoi(ID)
@@ -62,23 +99,24 @@ func ControllerUpdateDeletePatient(c *fiber.Ctx, mode string) error {
 		return c.Status(fiber.StatusBadRequest).SendString(common.INVALID_ID_REQUEST)
 	}
 
-	PatientID := patientID(intID)
-	if PatientID.verify() {
+	if Verify(&intID) {
 
 		switch mode {
 		case common.UPDATE:
-			PatientJson := new(PatientU)
-			if err := c.BodyParser(PatientJson); err != nil {
+			patientJson := new(PatientU)
+			if err := c.BodyParser(patientJson); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(common.IVALID_JSON_REQUEST)
 			}
-			if string, err := PatientJson.validate(); err != nil {
+			if string, err := patientJson.validate(); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(string)
 			}
-			status := PatientJson.Update(intID)
+			u.updateService.Update(intID, patientJson)
+			status := u.updateService.ReturnStatus()
 			return c.Status(fiber.StatusAccepted).SendString(status)
 
 		case common.DELETE:
-			status, patient := PatientID.Delete()
+			patient := u.deleteService.Delete(&intID)
+			status := u.deleteService.ReturnStatus()
 			if status == common.OK {
 				return c.JSON(patient)
 			} else {

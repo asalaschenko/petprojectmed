@@ -87,6 +87,19 @@ func LoadNonUniqueIDandDateField(rows pgx.Rows) (*map[int][]time.Time, error) {
 	return &m, nil
 }
 
+func LoadDate(rows pgx.Rows) (*[]time.Time, error) {
+	var arrayDate []time.Time
+	for rows.Next() {
+		var d time.Time
+		err := rows.Scan(&d)
+		if err != nil {
+			return nil, err
+		}
+		arrayDate = append(arrayDate, d)
+	}
+	return &arrayDate, nil
+}
+
 func LoadIDandIntField(rows pgx.Rows) (*map[int]int, error) {
 	m := make(map[int]int)
 	for rows.Next() {

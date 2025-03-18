@@ -30,18 +30,14 @@ type QueryPatientsListFilter struct {
 }
 
 type ParamsID struct {
-	ID patientsID `params:"id"`
+	ID []int `params:"id"`
 }
 
-type patientID int
-
-type patientsID []int
-
-func (ID *patientID) verify() bool {
+func Verify(ID *int) bool {
 	conn := storage.GetConnectionDB()
 	defer conn.Close(context.Background())
-
-	values := storage.GetIDofPatients(conn)
+	a := storage.NewIDofPatients(conn)
+	values := a.Get()
 	return slices.Contains(*values, int(*ID))
 }
 

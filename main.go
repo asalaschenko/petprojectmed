@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"os"
 	"petprojectmed/common"
 	"petprojectmed/routes"
+	"petprojectmed/storage"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -23,12 +25,17 @@ func main() {
 		return c.JSON(c.App().Stack())
 	})
 
-	registerRoutes(app, port)
-	app.Listen(":" + port)
-}
+	connD := storage.GetConnectionDB()
+	defer connD.Close(context.Background())
+	routes.RegisterRoutesDoctors(app, port, connD)
 
-func registerRoutes(app *fiber.App, port string) {
-	routes.RegisterRoutesDoctors(app, port)
-	routes.RegisterRoutesPatients(app, port)
-	routes.RegisterRoutesSchedule(app, port)
+	connP := storage.GetConnectionDB()
+	defer connP.Close(context.Background())
+	routes.RegisterRoutesPatients(app, port, connP)
+
+	connSch := storage.GetConnectionDB()
+	defer connSch.Close(context.Background())
+	routes.RegisterRoutesSchedule(app, port, connSch)
+
+	app.Listen(":" + port)
 }

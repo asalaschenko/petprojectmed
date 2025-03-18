@@ -9,11 +9,21 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func GetAllDoctors(conn *pgx.Conn) *[]Doctor {
+type AllDoctors struct {
+	conn *pgx.Conn
+}
+
+func NewAllDoctors(conn *pgx.Conn) *AllDoctors {
+	value := new(AllDoctors)
+	value.conn = conn
+	return value
+}
+
+func (a *AllDoctors) Get() *[]Doctor {
 	query := `SELECT * FROM doctors
 	order by id`
 
-	rows, err := conn.Query(context.Background(), query)
+	rows, err := a.conn.Query(context.Background(), query)
 	common.CheckErr(err)
 	defer rows.Close()
 
@@ -23,7 +33,17 @@ func GetAllDoctors(conn *pgx.Conn) *[]Doctor {
 	return doctors
 }
 
-func GetDoctorsByID(conn *pgx.Conn, doctorID []int) *[]Doctor {
+type DoctorsByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorsByID(conn *pgx.Conn) *DoctorsByID {
+	value := new(DoctorsByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorsByID) Get(doctorID []int) *[]Doctor {
 	query := `SELECT * FROM doctors WHERE id in `
 	str := "("
 	for index, value := range doctorID {
@@ -37,7 +57,7 @@ func GetDoctorsByID(conn *pgx.Conn, doctorID []int) *[]Doctor {
 	str += "\n" + "order by id"
 	query += str
 
-	rows, err := conn.Query(context.Background(), query)
+	rows, err := d.conn.Query(context.Background(), query)
 	common.CheckErr(err)
 	defer rows.Close()
 	doctors, err := LoadDoctorEntries(rows)
@@ -46,12 +66,21 @@ func GetDoctorsByID(conn *pgx.Conn, doctorID []int) *[]Doctor {
 	return doctors
 }
 
-func GetIDofDoctors(conn *pgx.Conn) *[]int {
+type IDofDoctors struct {
+	conn *pgx.Conn
+}
+
+func NewIDofDoctors(conn *pgx.Conn) *IDofDoctors {
+	value := new(IDofDoctors)
+	value.conn = conn
+	return value
+}
+
+func (i *IDofDoctors) Get() *[]int {
 	query := `
         SELECT id FROM doctors
     `
-
-	rows, err := conn.Query(context.Background(), query)
+	rows, err := i.conn.Query(context.Background(), query)
 	common.CheckErr(err)
 	defer rows.Close()
 
@@ -61,12 +90,22 @@ func GetIDofDoctors(conn *pgx.Conn) *[]int {
 	return IDs
 }
 
-func GetDoctorsIDandSpecializations(conn *pgx.Conn) *map[int]string {
+type DoctorsIDandSpecializations struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorsIDandSpecializations(conn *pgx.Conn) *DoctorsIDandSpecializations {
+	value := new(DoctorsIDandSpecializations)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorsIDandSpecializations) Get() *map[int]string {
 	query := `
         SELECT id, specialization FROM doctors
     `
 
-	rows, err := conn.Query(context.Background(), query)
+	rows, err := d.conn.Query(context.Background(), query)
 	common.CheckErr(err)
 	defer rows.Close()
 
@@ -76,12 +115,22 @@ func GetDoctorsIDandSpecializations(conn *pgx.Conn) *map[int]string {
 	return m
 }
 
-func GetDoctorsIDandDateofBirth(conn *pgx.Conn) *map[int]time.Time {
+type DoctorsIDandDateofBirth struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorsIDandDateOfBirth(conn *pgx.Conn) *DoctorsIDandDateofBirth {
+	value := new(DoctorsIDandDateofBirth)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorsIDandDateofBirth) Get() *map[int]time.Time {
 	query := `
         SELECT id, dateofbirth FROM doctors
     `
 
-	rows, err := conn.Query(context.Background(), query)
+	rows, err := d.conn.Query(context.Background(), query)
 	common.CheckErr(err)
 	defer rows.Close()
 
@@ -91,7 +140,17 @@ func GetDoctorsIDandDateofBirth(conn *pgx.Conn) *map[int]time.Time {
 	return m
 }
 
-func UpdateDoctorNameByID(conn *pgx.Conn, doctorID int, val string) {
+type DoctorNameByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorNameByID(conn *pgx.Conn) *DoctorNameByID {
+	value := new(DoctorNameByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorNameByID) Update(doctorID int, val string) {
 	query := `
 	UPDATE doctors
 	SET name = @name
@@ -102,11 +161,21 @@ func UpdateDoctorNameByID(conn *pgx.Conn, doctorID int, val string) {
 		"name": val,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func UpdateDoctorFamilyByID(conn *pgx.Conn, doctorID int, val string) {
+type DoctorFamilyByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorFamilyByID(conn *pgx.Conn) *DoctorFamilyByID {
+	value := new(DoctorFamilyByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorFamilyByID) Update(doctorID int, val string) {
 	query := `
 	UPDATE doctors
 	SET family = @family
@@ -117,11 +186,21 @@ func UpdateDoctorFamilyByID(conn *pgx.Conn, doctorID int, val string) {
 		"family": val,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func UpdateDoctorSpecializationByID(conn *pgx.Conn, doctorID int, val string) {
+type DoctorSpecializationByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorSpecializationByID(conn *pgx.Conn) *DoctorSpecializationByID {
+	value := new(DoctorSpecializationByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorSpecializationByID) Update(doctorID int, val string) {
 	query := `
 	UPDATE doctors
 	SET specialization = @specialization
@@ -132,11 +211,21 @@ func UpdateDoctorSpecializationByID(conn *pgx.Conn, doctorID int, val string) {
 		"specialization": val,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func UpdateDoctorCabinetByID(conn *pgx.Conn, doctorID int, val int) {
+type DoctorCabinetByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorCabinetByID(conn *pgx.Conn) *DoctorCabinetByID {
+	value := new(DoctorCabinetByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorCabinetByID) Update(doctorID int, val int) {
 	query := `
 	UPDATE doctors
 	SET cabinet = @cabinet
@@ -147,11 +236,21 @@ func UpdateDoctorCabinetByID(conn *pgx.Conn, doctorID int, val int) {
 		"cabinet": val,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func UpdateDoctorDateOfBirthByID(conn *pgx.Conn, doctorID int, val time.Time) {
+type DoctorDateOfBirthByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorDateOfBirthByID(conn *pgx.Conn) *DoctorDateOfBirthByID {
+	value := new(DoctorDateOfBirthByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorDateOfBirthByID) Update(doctorID int, val time.Time) {
 	query := `
 	UPDATE doctors
 	SET dateofbirth = @dateofbirth
@@ -162,11 +261,21 @@ func UpdateDoctorDateOfBirthByID(conn *pgx.Conn, doctorID int, val time.Time) {
 		"dateofbirth": val,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func InsertDoctor(conn *pgx.Conn, doctor *Doctor) {
+type DoctorCreate struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorCreate(conn *pgx.Conn) *DoctorCreate {
+	value := new(DoctorCreate)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorCreate) Insert(doctor *Doctor) {
 	query := `
         INSERT INTO doctors (name, family, specialization, cabinet, dateofbirth) VALUES (@name, @family, @specialization, @cabinet, @dateofbirth)
     `
@@ -178,11 +287,21 @@ func InsertDoctor(conn *pgx.Conn, doctor *Doctor) {
 		"dateofbirth":    doctor.DateOfBirth,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
 
-func DeleteDoctorByID(conn *pgx.Conn, doctorID int) {
+type DoctorByID struct {
+	conn *pgx.Conn
+}
+
+func NewDoctorByID(conn *pgx.Conn) *DoctorByID {
+	value := new(DoctorByID)
+	value.conn = conn
+	return value
+}
+
+func (d *DoctorByID) Delete(doctorID int) {
 	query := `
         DELETE FROM doctors WHERE id = @id
     `
@@ -190,6 +309,6 @@ func DeleteDoctorByID(conn *pgx.Conn, doctorID int) {
 		"id": doctorID,
 	}
 
-	_, err := conn.Exec(context.Background(), query, args)
+	_, err := d.conn.Exec(context.Background(), query, args)
 	common.CheckErr(err)
 }
