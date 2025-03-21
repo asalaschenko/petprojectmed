@@ -35,7 +35,7 @@ localhost:3000/
 
 
 Примеры запросов POST.
-=
+-
 BODY RAW:
 -
     /doctor
