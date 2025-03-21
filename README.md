@@ -34,5 +34,34 @@ localhost:3000/
     POST    /schedule
 
 
+    Примеры запросов POST.
+    -
+    BODY RAW:
+    POST    /doctor
+    {
+        "name": "Дмитрий",
+        "family": "Петров",
+        "dateOfBirth": "1995-01-12",
+        "specialization": "хирург",
+        "cabinet": 50
+    }
+    
+    POST    /patient
+    {
+        "name": "Дмитрий",
+        "family": "Петров",
+        "dateOfBirth": "1995-01-12",
+        "gender": "мужской",
+        "phoneNumber": "79039558644"
+    }
+
+    POST    /schedule
+    {
+    "doctorID" : 16,
+    "patientID": 10,
+    "date": "2025-03-06",
+    "time": "13:00"
+    }
+
 _Примечание:_
 * _для запуска необходима переменная окружения PORT_GOLANG со значением номера порта, на котором будет запускаться приложение_
