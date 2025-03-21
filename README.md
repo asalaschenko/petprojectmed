@@ -58,10 +58,10 @@ BODY RAW:
 
     /schedule
     {
-    "doctorID" : 16,
-    "patientID": 10,
-    "date": "2025-03-06",
-    "time": "13:00"
+        "doctorID" : 16,
+        "patientID": 10,
+        "date": "2025-03-06",
+        "time": "13:00"
     }
 
 _Примечание:_
