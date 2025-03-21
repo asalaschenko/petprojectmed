@@ -34,8 +34,8 @@ localhost:3000/
     POST    /schedule
 
 
-    Примеры запросов POST.
-    -
+Примеры запросов POST.
+-
     BODY RAW:
     POST    /doctor
     {
