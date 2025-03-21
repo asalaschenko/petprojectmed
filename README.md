@@ -10,8 +10,8 @@
 ![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
-endpoints:
-
+Endpoints:
+-
 localhost:3000/
 
     GET     /doctor/list=all
