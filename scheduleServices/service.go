@@ -1,7 +1,6 @@
 package scheduleservices
 
 import (
-	"log"
 	"math"
 	"petprojectmed/common"
 	"petprojectmed/doctors"
@@ -144,7 +143,7 @@ func (c *CreateService) Create(val *schedule.Appointment) {
 
 	_, layout := common.CheckAndParseDateValue(val.Date)
 	date := common.ReturnDateFormat(val.Date, layout)
-	log.Println(date)
+
 	if int(date.Weekday()) == SATURDAY || int(date.Weekday()) == SUNDAY {
 		status = append(status, common.DAY_IS_OFF)
 	}
@@ -152,7 +151,6 @@ func (c *CreateService) Create(val *schedule.Appointment) {
 		status = append(status, common.EXPIRED_DATE)
 	} else {
 		diffFloat := math.Abs(float64((time.Since(date) / time.Hour) / 24))
-		log.Println(diffFloat)
 		if diffFloat > doctorAppointmentPeriod {
 			status = append(status, common.TOO_LATE_DATE)
 		}
@@ -162,14 +160,14 @@ func (c *CreateService) Create(val *schedule.Appointment) {
 	time1 := common.ReturnTimeFormat(val.Time, layout)
 	trunc := time.Hour
 	time1 = time1.Truncate(trunc)
-	log.Println(time1)
+
 	if time1.Hour() < beginWork || time1.Hour() == breakWork || time1.Hour() > endWork {
 		status = append(status, common.NON_WORKING_HOUR)
 	}
 
 	dateTime := common.ReturnDateTimeFormat(date.Format(time.DateOnly), time1.Format(time.TimeOnly))
 	m := *c.Dates.Get(val.DoctorID)
-	log.Println(m)
+
 	if slices.Contains(m, dateTime) {
 		status = append(status, common.TIME_IS_BUSY)
 	}
