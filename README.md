@@ -37,7 +37,7 @@ localhost:3000/
 Примеры запросов POST.
 -
     BODY RAW:
-    POST    /doctor
+    /doctor
     {
         "name": "Дмитрий",
         "family": "Петров",
@@ -46,7 +46,7 @@ localhost:3000/
         "cabinet": 50
     }
     
-    POST    /patient
+    /patient
     {
         "name": "Дмитрий",
         "family": "Петров",
@@ -55,7 +55,7 @@ localhost:3000/
         "phoneNumber": "79039558644"
     }
 
-    POST    /schedule
+    /schedule
     {
     "doctorID" : 16,
     "patientID": 10,
