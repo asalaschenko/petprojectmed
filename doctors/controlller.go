@@ -22,6 +22,7 @@ func NewControllerGetDoctors(filterService IFilterService, listService IListServ
 
 func (g *ControllerGetDoctors) GetDoctors(c *fiber.Ctx, mode string) error {
 	switch mode {
+
 	case common.LIST_ID:
 		paramsID := new(ParamsID)
 		err := c.ParamsParser(paramsID)
@@ -37,6 +38,7 @@ func (g *ControllerGetDoctors) GetDoctors(c *fiber.Ctx, mode string) error {
 		} else {
 			return c.Status(fiber.StatusBadRequest).SendString(common.INVALID_REQUEST)
 		}
+
 	case common.FILTER:
 		queryFilters := new(QueryDoctorsListFilter)
 		err := c.QueryParser(queryFilters)
