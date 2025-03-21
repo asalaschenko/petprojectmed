@@ -110,7 +110,7 @@ func (f *FilterService) GetList(val *schedule.QuerySheduleListFilter) *[]storage
 	}
 }
 
-const doctorAppointmentPeriod = 90
+const doctorAppointmentPeriod = 91
 const beginWork, endWork, breakWork = 9, 18, 12
 const SATURDAY, SUNDAY = 6, 0
 
